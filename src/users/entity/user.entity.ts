@@ -8,7 +8,7 @@ export class User {
   @Column({ length: 127 })
   name: string;
 
-  @Column({ length: 127, unique: true }) // 추후 소셜 로그인시 unique 제거
+  @Column({ length: 127, unique: true }) // 소셜로그인시 unique 제거
   email: string;
 
   @Column({ length: 127 })
@@ -17,9 +17,12 @@ export class User {
   @Column({ length: 127 })
   phone: string;
 
-  @Column({ length: 255, nullable: true }) // 소셜로그인 시 채우기
+  @Column({ length: 255, nullable: true }) // 프로필사진
+  imgUrl?: string;
+
+  @Column({ length: 255, unique: true, nullable: true }) // 소셜로그인
   googleId?: string;
 
-  @Column({ length: 255, nullable: true }) // 사용자 선택
-  imgUrl?: string;
+  @Column({ length: 511, nullable: true }) // 소셜로그인
+  token?: string;
 }

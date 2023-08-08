@@ -8,7 +8,7 @@ export class Todo {
   @Column({ length: 200 })
   title: string;
 
-  @Column()
+  @Column() // 두가지.
   priority: number;
 
   @Column()
