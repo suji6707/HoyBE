@@ -41,8 +41,12 @@ export class WorkspaceController {
   // 이메일로 워크스페이스 초대
   @UseGuards(AuthGuard)
   @Post(':workspaceId/invitations')
-  async sendEmail(@Body() sendEmailDto: SendEmailDto) {
-    return this.emailService.sendEmail(sendEmailDto.email);
+  async sendEmail(
+    @Req() req,
+    @Param('workspaceId') workspaceId: number,
+    @Body() sendEmailDto: SendEmailDto,
+  ) {
+    return this.emailService.sendEmail(workspaceId, sendEmailDto.email);
   }
   /* Accept invitation */
 

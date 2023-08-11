@@ -25,7 +25,7 @@ export class Workspace {
   @JoinColumn({ name: 'host' }) // 방장 userId
   host: User;
 
-  @Column() // 멤버 수
+  @Column({ default: 0 }) // 멤버 수
   memberCount: number;
 
   // worksapce : user
