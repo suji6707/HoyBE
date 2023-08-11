@@ -17,6 +17,8 @@ async function bootstrap() {
       origin: process.env.CORS_ORIGIN,
       credentials: true,
     });
+  } else {
+    app.enableCors();
   }
 
   await app.listen(8000);
