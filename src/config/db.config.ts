@@ -11,7 +11,3 @@ export const TypeOrmConfig: TypeOrmModuleOptions = {
   entities: [__dirname + '/../**/*.entity.{js,ts}'],
   synchronize: true,
 };
-
-// /Users/heojisu/coding/Sparta/hoy-be/src/auth/auth.service.ts
-// /Users/heojisu/coding/Sparta/hoy-be/src/config/db.config.ts
-// /Users/heojisu/coding/Sparta/hoy-be/src/users/entity/user.entity.ts
