@@ -10,6 +10,7 @@ import { WorkspaceModule } from './workspace/workspace.module';
 import { GroupModule } from './group/group.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -43,6 +44,6 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     }),
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [AppService],
 })
 export class AppModule {}
