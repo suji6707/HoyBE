@@ -16,9 +16,12 @@ export class WorkspaceInvitation {
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
 
-  @ManyToOne(() => User, (user) => user.workspaceInvitations)
-  @JoinColumn({ name: 'userId' })
-  invitedUser: User;
+  // @ManyToOne(() => User, (user) => user.workspaceInvitations)
+  // @JoinColumn({ name: 'userId' })
+  // invitedUser: User;
+
+  @Column({ length: 127 })
+  email: string;
 
   @Column({
     type: 'enum',
@@ -26,4 +29,7 @@ export class WorkspaceInvitation {
     default: InvitationStatus.PENDING,
   })
   status: InvitationStatus;
+
+  @Column({ default: 0 })
+  count: number;
 }

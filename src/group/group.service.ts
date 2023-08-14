@@ -14,6 +14,7 @@ export class GroupService {
     @InjectRepository(User) private userRepo: Repository<User>,
   ) {}
 
+  // 그룹 생성
   async createGroup(
     userId: number,
     workspaceId: number,
@@ -44,4 +45,13 @@ export class GroupService {
     await this.groupRepo.save(group); // tasks만 null 상태
     return group;
   }
+
+  // 그룹에 유저 초대
+  // POST /workspace/{workspaceId}/group/{groupId}/members
+  // members를 어떻게? userId로 할 것인지?
+  async addUserToGroup(groupId: number, userId: number) {}
+
+  // 그룹 id 조회
+
+  // 사용자 조회: name으로 해야함.
 }

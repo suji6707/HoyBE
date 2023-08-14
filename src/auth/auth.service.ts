@@ -34,36 +34,36 @@ export class AuthService {
     user.phone = signupDto.phone;
 
     await this.userRepo.save(user);
-    return user; // 로그인 라우팅시 필요
+
+    const dto = new LoginDto();
+    dto.email = signupDto.email;
+    dto.password = signupDto.password;
+
+    return user;
+    // return await this.login(dto); // 자동 로그인 라우팅
   }
 
-  async login(loginDto: LoginDto) {
-    // 1. Validate user input
-    if (!validateEmail(loginDto.email)) {
-      throw new AuthException(
-        '잘못된 이메일 입력입니다.',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-    // 2. Check if user exist
+  async login(email, givenName, imgUrl) {
     const storedUser = await this.userRepo.findOne({
-      where: { email: loginDto.email },
+      where: { email: email },
     });
+    // email 존재하지 않을 때: Create user in our database
     if (!storedUser) {
-      throw new AuthException(
-        '존재하지 않는 email입니다.',
-        HttpStatus.UNAUTHORIZED,
-      );
+      const user = new User();
+      user.email = email;
+      user.name = givenName;
+      user.imgUrl = imgUrl;
+
+      const savedUser = await this.userRepo.save(user);
+      // 방금 저장한 유저의 User.id 가져오기
+      const userId = savedUser.id;
+
+      const payload = { sub: userId };
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+      };
     }
-    // 3. Validate password
-    const isValidPassword = await argon.verify(
-      storedUser.password,
-      loginDto.password,
-    );
-    if (!isValidPassword) {
-      throw new AuthException('비밀번호가 틀립니다.', HttpStatus.UNAUTHORIZED);
-    }
-    // 4. Token issuance
+    // 2. email 존재할 때
     const payload = { sub: storedUser.id };
     return {
       access_token: await this.jwtService.signAsync(payload),

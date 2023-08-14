@@ -2,10 +2,12 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
@@ -15,6 +17,7 @@ import { CreateGroupDto } from 'src/group/dtos/create-group.dto';
 import { GroupService } from 'src/group/group.service';
 import { SendEmailDto } from './dtos/email-invitations.dto';
 import { EmailService } from './email.service';
+import { WorkspaceGuard } from './workspace.guard';
 
 @Controller('workspace')
 export class WorkspaceController {
@@ -42,16 +45,34 @@ export class WorkspaceController {
   @UseGuards(AuthGuard)
   @Post(':workspaceId/invitations')
   async sendEmail(
-    @Req() req,
     @Param('workspaceId') workspaceId: number,
     @Body() sendEmailDto: SendEmailDto,
   ) {
-    return this.emailService.sendEmail(workspaceId, sendEmailDto.email);
+    return await this.emailService.sendEmail(workspaceId, sendEmailDto.email);
   }
-  /* Accept invitation */
 
+  // 초대 수락
   @Get('accept/:uniqueToken')
+  async acceptInvitation(
+    @Param('uniqueToken') uniqueToken: string,
+    @Res() res,
+  ) {}
+  //   try {
 
+  //   } catch (err) {
+  //     console.log(err);
+  //     throw new NotFoundException(err);
+  //   }
+
+  //   const result = await this.emailService.acceptInvitation(uniqueToken);
+  //   // HTTP 응답 로직
+  //   if (result.success) {
+  //     return res.redirect(result.url);
+
+  //   } else {
+  //     throw new NotFoundException(error.message);
+  //   }
+  // }
   // 입력된 이메일이 User 테이블에 존재할 경우 워크스페이스 초대만
 
   // 비회원일 경우 이메일 클릭시 가입부터 진행되도록 함.
@@ -76,7 +97,8 @@ export class WorkspaceController {
     return group;
   }
 
-  @UseGuards(AuthGuard) // WorkspaceGuard 추가
+  // task 조회
+  @UseGuards(AuthGuard, WorkspaceGuard) // WorkspaceGuard 추가
   @Get(':workspaceId/tasks')
   async findTasksByDate(
     @Req() req,

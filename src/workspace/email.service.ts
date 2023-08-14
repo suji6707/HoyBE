@@ -4,53 +4,50 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkspaceInvitation } from './entity/workspace_invitations.entity';
 import { Repository } from 'typeorm';
+import 'dotenv/config';
+import { User } from 'src/users/entity/user.entity';
+import { Workspace } from './entity/workspace.entity';
 
 @Injectable()
 export class EmailService {
   constructor(
     @InjectRepository(WorkspaceInvitation)
     private invitationRepo: Repository<WorkspaceInvitation>,
+    @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(Workspace) private workspaceRepo: Repository<Workspace>,
     private readonly mailerService: MailerService,
     private jwtService: JwtService,
   ) {}
-
-  // public sendEmail(email: string): void {
-  //   this.mailerService
-  //     .sendMail({
-  //       to: email,
-  //       from: 'noreply@nestjs.com',
-  //       subject: 'Testing Nest MailerModule',
-  //       text: 'Welcome',
-  //       html: '<b>welcome</b>', // HTML body content
-  //     })
-  //     .then((success) => {
-  //       console.log(success);
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //     });
-  // }
 
   public async sendEmail(workspaceId: number, email: string): Promise<void> {
     // 토큰/Unique ID
     const payload = { workspaceId: workspaceId, email: email };
     const uniqueToken = await this.jwtService.signAsync(payload);
 
-    // // 초대 내역 저장
-    // const invitation = new WorkspaceInvitation();
-    // invitation.uniqueToken = uniqueToken;
-    // // 아직 비회원이면 email에 해당하는 user가 없는데 어떻게?
-    // invitation.invitedUser = await this.invitationRepo.save();
+    // 초대 내역 저장
+    const workspaceInvitation = new WorkspaceInvitation();
+    const workspace = await this.workspaceRepo.findOne({
+      where: { id: workspaceId },
+    });
+    console.log('fr: workspace_invitation', workspace);
+    workspaceInvitation.workspace = workspace;
+    workspaceInvitation.email = email; // 비회원이면 User 객체가 없기 때문에 email만 저장하는 걸로 통일
+    workspaceInvitation.uniqueToken = uniqueToken;
+    workspaceInvitation.count += 1;
+    await this.invitationRepo.save(workspaceInvitation);
 
-    // 링크 생성
+    // 링크 생성. 아래 도메인 GET 요청으로
+    // 1. hoy.im 사이트 이동 및 구글 로그인
+    // 2. accept 절차 진행
+    const invitationLink = `${process.env.DOMAIN}/accept/${uniqueToken}`;
 
-    await this.mailerService
+    this.mailerService
       .sendMail({
         to: email,
         from: 'noreply@nestjs.com',
-        subject: 'Testing Nest MailerModule',
-        text: 'Welcome',
-        html: '<b>welcome</b>', // HTML body content
+        subject: 'Hoy 워크스페이스로 초대합니다', // 이메일 제목
+        text: `Please join our workspace by clicking the link: ${invitationLink}`,
+        html: `<p>Please <a href="${invitationLink}">click here</a> to join our workspace.</p>`, // HTML body content
       })
       .then((success) => {
         console.log(success);
@@ -60,7 +57,44 @@ export class EmailService {
       });
   }
 
-  async acceptInvitation(@Param('uniqueId') uniqueId: string) {}
+  // 컨트롤러: GET('accept/:uniqueToken')
+  async acceptInvitation(uniqueToken: string) {
+    // try catch 넣기
+    const decoded = await this.jwtService.verifyAsync(uniqueToken);
+    const { workspaceId, email } = decoded;
 
-  // 컨트롤러: GET('accept/:uniqueId')
+    // 사용자 확인
+    const user = await this.userRepo.findOne({ where: { email: email } });
+    if (!user) {
+      // 회원가입 페이지로 리디렉션 (클라이언트측 URL)
+      return {
+        success: true,
+        url: `${process.env.DOMAIN}/auth/signup`,
+        workspaceId: workspaceId,
+        email: email,
+      };
+    } else {
+      throw new Error('Invalid token or other error occurred');
+    }
+  }
+
+  async addUserToWorkspace() {}
 }
+
+// 1. param으로 uniqueToken 받아서 Jwt -> workspaceId, email 추출.
+// User.find (email) -> if (!user) 비회원이면
+// login API로 라우팅.
+// 1) POST http://localhost:8000/auth/signup 로 라우팅한 후,
+// 2) 자동으로 POST http://localhost:8000/auth/login 로그인시킴
+
+// 가입된 유저를 대상으로 아래 절차 진행(위에서 리턴 종료하면 안됨)
+// 2. addUser To workspace_member 테이블
+// workspace_member 객체 추가.
+// 1) workspace, User 각각 workspaceId, email로 find해서 객체 넣기.
+// 2) workspaceMember.nickname = User.findOne(email) ->의 name 넣기.
+
+// 3. workspace_invitation 테이블 업데이트
+// new () 선언
+// workspaceInvitation = invitationRepo.findOne(email)
+// workspaceInvitation.status = ACCEPTED (enum 처리)
+// invitationRepo.save(workspaceInvitation)

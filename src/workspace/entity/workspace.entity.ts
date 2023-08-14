@@ -12,6 +12,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { WorkspaceInvitation } from './workspace_invitations.entity';
+import { WorkspaceMember } from './workspace_member.entity';
 
 @Entity({ name: 'Workspace' })
 export class Workspace {
@@ -28,10 +29,12 @@ export class Workspace {
   @Column({ default: 0 }) // 멤버 수
   memberCount: number;
 
-  // worksapce : user
-  @ManyToMany(() => User, (user) => user.workspaces)
-  @JoinTable({ name: 'workspace_member' })
-  members: User[];
+  // workspace : user
+  @OneToMany(
+    () => WorkspaceMember,
+    (workspaceMember) => workspaceMember.workspace,
+  )
+  workspaceMembers: WorkspaceMember[];
 
   // workspace : invitation
   @OneToMany(
