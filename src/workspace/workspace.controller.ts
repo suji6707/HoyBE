@@ -54,7 +54,21 @@ export class WorkspaceController {
   async acceptInvitation(
     @Param('uniqueToken') uniqueToken: string,
     @Res() res,
-  ) {}
+  ) {
+    const result = await this.emailService.acceptInvitation(uniqueToken);
+    const { workspaceId, email } = result;
+
+    if (result.success) {
+      // Redirect to login page with workspaceId, email as query parameter
+      const redirectUrl = `${process.env.DOMAIN}/auth/login?workspaceId=${workspaceId}&email=${email}`;
+      return res.redirect(redirectUrl);
+    } else {
+      // Handle error
+      return res
+        .status(400)
+        .send('An error occurred while processing your invitation.');
+    }
+  }
   //   try {
 
   //   } catch (err) {

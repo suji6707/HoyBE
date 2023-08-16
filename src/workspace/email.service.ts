@@ -69,24 +69,37 @@ export class EmailService {
 
   // 컨트롤러: GET('accept/:uniqueToken')
   async acceptInvitation(uniqueToken: string) {
-    // try catch 넣기
     const decoded = await this.jwtService.verifyAsync(uniqueToken);
     const { workspaceId, email } = decoded;
 
-    // 사용자 확인
-    const user = await this.userRepo.findOne({ where: { email: email } });
-    if (!user) {
-      // 회원가입 페이지로 리디렉션 (클라이언트측 URL)
-      return {
-        success: true,
-        url: `${process.env.DOMAIN}/auth/signup`,
-        workspaceId: workspaceId,
-        email: email,
-      };
-    } else {
-      throw new Error('Invalid token or other error occurred');
-    }
+    return {
+      success: true,
+      workspaceId: workspaceId,
+      email: email,
+    };
   }
+  //   const user = await this.userRepo.findOne({ where: { email: email } });
+  //   if (!user) {
+  //     // 비회원
+  //   } else {
+  //     // 회원
+  //   }
+  // } catch (err) {
+  //   throw new Error('Invalid token or other error occurred');
+  // }
+
+  // 사용자 확인
+  // if (!user) {
+  //   // 회원가입 페이지로 리디렉션 (클라이언트측 URL)
+  //   return {
+  //     success: true,
+  //     url: `${process.env.DOMAIN}/auth/login`,
+  //     workspaceId: workspaceId,
+  //     email: email,
+  //   };
+  // } else {
+  //   throw new Error('Invalid token or other error occurred');
+  // }
 
   async addUserToWorkspace() {}
 }
