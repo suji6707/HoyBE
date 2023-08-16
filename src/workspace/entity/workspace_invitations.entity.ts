@@ -12,13 +12,11 @@ export class WorkspaceInvitation {
   @PrimaryColumn()
   uniqueToken: string;
 
-  @ManyToOne(() => Workspace, (workspace) => workspace.workspaceInvitations)
+  @ManyToOne(() => Workspace, (workspace) => workspace.workspaceInvitations, {
+    cascade: true,
+  })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
-
-  // @ManyToOne(() => User, (user) => user.workspaceInvitations)
-  // @JoinColumn({ name: 'userId' })
-  // invitedUser: User;
 
   @Column({ length: 127 })
   email: string;
@@ -29,7 +27,4 @@ export class WorkspaceInvitation {
     default: InvitationStatus.PENDING,
   })
   status: InvitationStatus;
-
-  @Column({ default: 0 })
-  count: number;
 }

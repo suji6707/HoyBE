@@ -13,11 +13,15 @@ export class WorkspaceMember {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Workspace, (workspace) => workspace.workspaceMembers)
+  @ManyToOne(() => Workspace, (workspace) => workspace.workspaceMembers, {
+    cascade: true,
+  })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
 
-  @ManyToOne(() => User, (workspace) => workspace.workspaceMembers)
+  @ManyToOne(() => User, (workspace) => workspace.workspaceMembers, {
+    cascade: true,
+  })
   @JoinColumn({ name: 'userId' })
   member: User;
 

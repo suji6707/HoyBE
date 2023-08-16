@@ -1,15 +1,16 @@
-import { Task } from 'src/task/entity/task.entity';
 import { User } from 'src/users/entity/user.entity';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import {
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity({ name: 'Group' })
@@ -21,7 +22,9 @@ export class Group {
   name: string;
 
   // group : workspace
-  @ManyToOne(() => Workspace, (workspace) => workspace.groups)
+  @ManyToOne(() => Workspace, (workspace) => workspace.groups, {
+    cascade: true,
+  })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
 
@@ -30,7 +33,12 @@ export class Group {
   @JoinTable({ name: 'group_member' })
   members: User[] | null;
 
-  // group : tasks
-  @OneToMany(() => Task, (task) => task.group)
-  tasks: Task[] | null;
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+
+  @DeleteDateColumn()
+  deletedAt!: Date;
 }

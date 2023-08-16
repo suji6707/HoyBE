@@ -14,13 +14,14 @@ async function bootstrap() {
   if (process.env.CORS == 'true') {
     app.enableCors({
       allowedHeaders: 'content-type',
-      origin: process.env.CORS_ORIGIN,
+      origin: process.env.CORS_ORIGIN || '*',
       credentials: true,
     });
   } else {
     app.enableCors();
   }
 
+  app.setGlobalPrefix('api');
   await app.listen(8000);
 }
 bootstrap();

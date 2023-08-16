@@ -3,6 +3,8 @@ import { Task } from 'src/task/entity/task.entity';
 import { User } from 'src/users/entity/user.entity';
 import {
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   JoinTable,
@@ -10,6 +12,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { WorkspaceInvitation } from './workspace_invitations.entity';
 import { WorkspaceMember } from './workspace_member.entity';
@@ -26,8 +29,11 @@ export class Workspace {
   @JoinColumn({ name: 'host' }) // 방장 userId
   host: User;
 
-  @Column({ default: 0 }) // 멤버 수
+  @Column({ default: 1 }) // 실제 들어온 멤버 수
   memberCount: number;
+
+  @Column({ default: 1 }) // 초대 수 (수락여부는 workspace_invitation 테이블에)
+  invitationCount: number;
 
   // workspace : user
   @OneToMany(
@@ -52,4 +58,13 @@ export class Workspace {
   // 참여자들 배열이 있고 각 참여자에 task가 배열로 존재함.
   @OneToMany(() => Task, (task) => task.workspace)
   tasks: Task[];
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+
+  @DeleteDateColumn()
+  deletedAt!: Date;
 }

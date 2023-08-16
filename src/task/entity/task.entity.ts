@@ -1,13 +1,14 @@
-import { group } from 'console';
-import { Group } from 'src/group/entity/group.entity';
 import { User } from 'src/users/entity/user.entity';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import {
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity({ name: 'Task' })
@@ -24,14 +25,9 @@ export class Task {
   user: User;
 
   // task : workspace
-  @ManyToOne(() => Workspace, (workspace) => workspace.tasks)
+  @ManyToOne(() => Workspace, (workspace) => workspace.tasks, { cascade: true })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
-
-  // task : group -> 그룹별 task 조회
-  @ManyToOne(() => Group, (group) => group.tasks)
-  @JoinColumn()
-  group: Group;
 
   @Column({ default: 0 }) // 0: 일반, 1: 중요
   priority: number;
@@ -40,8 +36,17 @@ export class Task {
   status: boolean; // false: 미완, true: 완료
 
   @Column({ type: 'date', default: () => 'CURRENT_TIMESTAMP' })
-  createdDate: Date;
+  scheduleDate!: Date;
 
   @Column({ type: 'date', nullable: true })
   dueDate?: Date;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+
+  @DeleteDateColumn()
+  deletedAt!: Date;
 }

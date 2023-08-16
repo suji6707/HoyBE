@@ -40,6 +40,7 @@ export class WorkspaceGuard implements CanActivate {
       throw new UnauthorizedException('You are not a member of this workspace');
     }
 
+    console.log('fr: WorkspaceGuard 통과');
     return true;
   }
 }

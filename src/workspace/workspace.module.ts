@@ -9,6 +9,7 @@ import { GroupModule } from 'src/group/group.module';
 import { EmailService } from './email.service';
 import { WorkspaceInvitation } from './entity/workspace_invitations.entity';
 import { WorkspaceMember } from './entity/workspace_member.entity';
+import { WorkspaceGuard } from './workspace.guard';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { WorkspaceMember } from './entity/workspace_member.entity';
     ]),
     GroupModule,
   ],
-  providers: [WorkspaceService, EmailService],
+  providers: [WorkspaceService, EmailService, WorkspaceGuard],
   controllers: [WorkspaceController],
+  exports: [WorkspaceService, TypeOrmModule],
 })
 export class WorkspaceModule {}

@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Param,
   Post,
   Query,
@@ -17,7 +16,6 @@ import { CreateGroupDto } from 'src/group/dtos/create-group.dto';
 import { GroupService } from 'src/group/group.service';
 import { SendEmailDto } from './dtos/email-invitations.dto';
 import { EmailService } from './email.service';
-import { WorkspaceGuard } from './workspace.guard';
 
 @Controller('workspace')
 export class WorkspaceController {
@@ -95,24 +93,5 @@ export class WorkspaceController {
       createGroupDto,
     );
     return group;
-  }
-
-  // task 조회
-  @UseGuards(AuthGuard, WorkspaceGuard) // WorkspaceGuard 추가
-  @Get(':workspaceId/tasks')
-  async findTasksByDate(
-    @Req() req,
-    @Param('workspaceId') workspaceId: number,
-    @Query('date') date?: string,
-  ) {
-    const userId = req.userId;
-    const tasks = await this.workspaceService.findTasksByDate(
-      workspaceId,
-      userId,
-      date,
-    );
-    console.log(userId, tasks);
-
-    return tasks;
   }
 }

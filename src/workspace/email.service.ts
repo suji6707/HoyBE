@@ -24,17 +24,27 @@ export class EmailService {
     const payload = { workspaceId: workspaceId, email: email };
     const uniqueToken = await this.jwtService.signAsync(payload);
 
-    // 초대 내역 저장
-    const workspaceInvitation = new WorkspaceInvitation();
+    // 해당 워크스페이스 초대 횟수 체크
     const workspace = await this.workspaceRepo.findOne({
       where: { id: workspaceId },
     });
-    console.log('fr: workspace_invitation', workspace);
+
+    if (workspace.invitationCount >= 20) {
+      throw new Error(
+        '초대 가능 인원을 초과하였습니다. Hoy 팀과 미팅 일정을 잡으셔서 더 많은 유저를 초대해보세요!',
+      );
+    }
+
+    // 초대 내역 저장
+    const workspaceInvitation = new WorkspaceInvitation();
     workspaceInvitation.workspace = workspace;
     workspaceInvitation.email = email; // 비회원이면 User 객체가 없기 때문에 email만 저장하는 걸로 통일
     workspaceInvitation.uniqueToken = uniqueToken;
-    workspaceInvitation.count += 1;
     await this.invitationRepo.save(workspaceInvitation);
+
+    // 워크스페이스 invitationCount
+    workspace.invitationCount += 1;
+    await this.workspaceRepo.save(workspace);
 
     // 링크 생성. 아래 도메인 GET 요청으로
     // 1. hoy.im 사이트 이동 및 구글 로그인
