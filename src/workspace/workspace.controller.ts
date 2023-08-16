@@ -51,13 +51,14 @@ export class WorkspaceController {
     return await this.emailService.sendEmail(workspaceId, sendEmailDto.email);
   }
 
-  // 초대 수락
+  // 초대 수락: 어느 워크스페이스인지 정보만 가지고 로그인 하도록. (로그인에선 workspaceId가 있으면 워크스페이스 초대 메일을 통한 로그인임을 인식하고 auth/login으로 라우팅)
   @Get('accept/:uniqueToken')
   async acceptInvitation(
     @Param('uniqueToken') uniqueToken: string,
     @Req() req,
     @Res() res,
   ) {
+    console.log(uniqueToken);
     const decoded = await this.jwtService.verifyAsync(uniqueToken);
     const { workspaceId, email } = decoded;
     console.log('fr: 사용자가 초대받은 워크스페이스: ', workspaceId);

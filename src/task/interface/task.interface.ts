@@ -9,6 +9,7 @@ export type TaskPartial = {
 };
 
 export type TaskResponse = {
+  date: string;
   dayOfWeek: string;
   day: string;
   dDay: boolean;

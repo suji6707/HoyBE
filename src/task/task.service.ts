@@ -49,7 +49,7 @@ export class TaskService {
     workspaceId: number,
     userId: number,
     dateQuery?: string,
-  ): Promise<Record<string, TaskResponse>> {
+  ): Promise<TaskResponse[]> {
     let selectedDate;
     if (dateQuery) {
       // 쿼리 문자열에서 받은 날짜 파싱
@@ -72,25 +72,31 @@ export class TaskService {
       relations: ['user', 'workspace'], // 릴레이션은 JOIN ON과도 같음
     });
 
-    // 날짜 기준으로 그룹화된 결과를 저장할 객체
-    const result: Record<string, TaskResponse> = {}; // 객체 리터럴
+    // 날짜 기준으로 그룹화된 결과를 저장할 배열
+    const result: TaskResponse[] = []; // 배열
 
     for (const task of tasks) {
       // 포멧 변경할 날짜
       const formattedDate = new Date(task.scheduleDate);
       // 키값 (문자열 형식 날짜)
       const dateStr = format(formattedDate, 'yyyy-MM-dd');
-      // 1차 정보들
-      result[dateStr] = {
-        dayOfWeek: format(formattedDate, 'EEE', { locale: ko }),
-        day: format(formattedDate, 'M/d'),
-        dDay: false, // dueDate 로직에 따라 업데이트 필요
-        tasks: [],
-      };
+
+      let taskResponse = result.find((taskRes) => taskRes.date === dateStr);
+
+      if (!taskResponse) {
+        taskResponse = {
+          date: dateStr,
+          dayOfWeek: format(formattedDate, 'EEE', { locale: ko }),
+          day: format(formattedDate, 'M/d'),
+          dDay: false, // dueDate 로직에 따라 업데이트 필요
+          tasks: [],
+        };
+        result.push(taskResponse);
+      }
       console.log('fr: result: ', result); // 같은 날짜면 두 번 뜸.
 
       // tasks 배열 채우기
-      result[dateStr].tasks.push({
+      taskResponse.tasks.push({
         id: task.id,
         title: task.title,
         userId: task.user.id,
@@ -100,6 +106,14 @@ export class TaskService {
         scheduleDate: task.scheduleDate,
       });
     }
+
+    result.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+
+      return dateA.getTime() - dateB.getTime();
+    });
+
     return result;
   }
 }
