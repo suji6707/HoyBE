@@ -7,14 +7,17 @@ import { Repository } from 'typeorm';
 import 'dotenv/config';
 import { User } from 'src/users/entity/user.entity';
 import { Workspace } from './entity/workspace.entity';
+import { WorkspaceMember } from './entity/workspace_member.entity';
 
 @Injectable()
 export class EmailService {
   constructor(
-    @InjectRepository(WorkspaceInvitation)
-    private invitationRepo: Repository<WorkspaceInvitation>,
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Workspace) private workspaceRepo: Repository<Workspace>,
+    @InjectRepository(WorkspaceInvitation)
+    private invitationRepo: Repository<WorkspaceInvitation>,
+    @InjectRepository(WorkspaceMember)
+    private workspaceMemberRepo: Repository<WorkspaceMember>,
     private readonly mailerService: MailerService,
     private jwtService: JwtService,
   ) {}
@@ -67,41 +70,23 @@ export class EmailService {
       });
   }
 
-  // 컨트롤러: GET('accept/:uniqueToken')
-  async acceptInvitation(uniqueToken: string) {
-    const decoded = await this.jwtService.verifyAsync(uniqueToken);
-    const { workspaceId, email } = decoded;
+  async addUserToWorkspace(user: User, workspaceId: number) {
+    // 필요한 정보들
+    const workspace = await this.workspaceRepo.findOne({
+      where: { id: workspaceId },
+    });
 
-    return {
-      success: true,
-      workspaceId: workspaceId,
-      email: email,
-    };
+    // WorkspaceMember 객체 생성
+    const workspaceMember = new WorkspaceMember();
+    workspaceMember.workspace = workspace;
+    workspaceMember.member = user;
+    workspaceMember.nickname = user.name; // 구글 로그인 이름 넣기
+
+    // 해당 유저를 member로 추가 (매핑테이블)
+    await this.workspaceMemberRepo.save(workspaceMember);
+
+    return workspaceMember;
   }
-  //   const user = await this.userRepo.findOne({ where: { email: email } });
-  //   if (!user) {
-  //     // 비회원
-  //   } else {
-  //     // 회원
-  //   }
-  // } catch (err) {
-  //   throw new Error('Invalid token or other error occurred');
-  // }
-
-  // 사용자 확인
-  // if (!user) {
-  //   // 회원가입 페이지로 리디렉션 (클라이언트측 URL)
-  //   return {
-  //     success: true,
-  //     url: `${process.env.DOMAIN}/auth/login`,
-  //     workspaceId: workspaceId,
-  //     email: email,
-  //   };
-  // } else {
-  //   throw new Error('Invalid token or other error occurred');
-  // }
-
-  async addUserToWorkspace() {}
 }
 
 // 1. param으로 uniqueToken 받아서 Jwt -> workspaceId, email 추출.
@@ -121,3 +106,15 @@ export class EmailService {
 // workspaceInvitation = invitationRepo.findOne(email)
 // workspaceInvitation.status = ACCEPTED (enum 처리)
 // invitationRepo.save(workspaceInvitation)
+
+// if (user) {
+//   // 이미 존재하는 유저면 addUserToWorkspace() 호출
+//   await this.addUserToWorkspace(user, workspaceId);
+//   return { success: true };
+// } else {
+//   // workspaceId를 세션에 저장 후 유저를 로그인으로 리다이렉트
+//   return {
+//     success: false,
+//     url: `${process.env.DOMAIN}/auth/login?workspaceId=${workspaceId}`,
+//   };
+// }

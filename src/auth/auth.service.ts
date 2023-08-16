@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entity/user.entity';
+import { EmailService } from 'src/workspace/email.service';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -9,9 +10,10 @@ export class AuthService {
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
-  async login(googleId, email, givenName, imgUrl) {
+  async login(googleId, email, givenName, imgUrl, workspaceId?: number) {
     const storedUser = await this.userRepo.findOne({
       where: { googleId: googleId },
     });
@@ -36,6 +38,10 @@ export class AuthService {
     // user 객체에 token 저장
     user.token = access_token;
     await this.userRepo.save(user);
+
+    if (workspaceId) {
+      await this.emailService.addUserToWorkspace(user, workspaceId);
+    }
 
     // 클라이언트에 토큰 반환
     return { access_token: access_token };

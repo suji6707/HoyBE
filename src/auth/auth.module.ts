@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from 'src/auth.guard';
 import 'dotenv/config';
+import { WorkspaceModule } from 'src/workspace/workspace.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import 'dotenv/config';
       secret: process.env.JWT_SECRET_KEY || 'secret',
       signOptions: { expiresIn: '4w' },
     }),
+    WorkspaceModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AuthGuard],

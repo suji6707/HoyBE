@@ -24,6 +24,6 @@ import { WorkspaceGuard } from './workspace.guard';
   ],
   providers: [WorkspaceService, EmailService, WorkspaceGuard],
   controllers: [WorkspaceController],
-  exports: [WorkspaceService, TypeOrmModule],
+  exports: [WorkspaceService, TypeOrmModule, EmailService],
 })
 export class WorkspaceModule {}
