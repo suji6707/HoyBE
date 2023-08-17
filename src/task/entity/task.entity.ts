@@ -1,3 +1,4 @@
+import { Comment } from 'src/comment/entity/comment.entity';
 import { User } from 'src/users/entity/user.entity';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import {
@@ -7,6 +8,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -28,6 +30,13 @@ export class Task {
   @ManyToOne(() => Workspace, (workspace) => workspace.tasks, { cascade: true })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
+
+  // task : comment
+  @OneToMany(() => Comment, (comment) => comment.task)
+  comments: Comment[];
+
+  @Column({ default: 0 })
+  commentCount: number;
 
   @Column({ default: 0 }) // 0: 일반, 1: 중요
   priority: number;

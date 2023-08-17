@@ -17,7 +17,6 @@ export class EmailService {
     @InjectRepository(WorkspaceInvitation)
     private invitationRepo: Repository<WorkspaceInvitation>,
     @InjectRepository(WorkspaceMember)
-    private workspaceMemberRepo: Repository<WorkspaceMember>,
     private readonly mailerService: MailerService,
     private jwtService: JwtService,
   ) {}
@@ -46,14 +45,13 @@ export class EmailService {
     await this.invitationRepo.save(workspaceInvitation);
 
     // 워크스페이스 invitationCount
-    workspace.invitationCount += 1;
-    await this.workspaceRepo.save(workspace);
+    await this.workspaceRepo.update(workspaceId, {
+      invitationCount: () => 'invitationCount + 1',
+    });
 
     // 링크 생성. 아래 도메인 GET 요청으로
     // 1. hoy.im 사이트 이동 및 구글 로그인
     // 2. accept 절차 진행
-    // const invitationLink = `${process.env.SERVER_DOMAIN}/accept/${uniqueToken}`;
-    // const invitationLink = `${process.env.SERVER_DOMAIN}/testLogin/${workspaceId}`;
     const invitationLink = `${process.env.SERVER_DOMAIN}/auth/google/callback/${uniqueToken}`;
     console.log('fr: 이메일 초대링크: ', invitationLink);
 

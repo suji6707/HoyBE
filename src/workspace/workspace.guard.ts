@@ -34,7 +34,6 @@ export class WorkspaceGuard implements CanActivate {
     const isMember = await this.workspaceMemberRepo.findOne({
       where: { member: { id: userId } },
     });
-    // const isMember = workspace.members.some((member) => member.id == userId);
 
     if (!isMember) {
       throw new UnauthorizedException('You are not a member of this workspace');

@@ -102,7 +102,7 @@ export class TaskService {
         userId: task.user.id,
         priority: task.priority, // 0또는 1
         done: task.status, // boolean
-        commentCount: 0, // 추가하기
+        commentCount: task.commentCount,
         scheduleDate: task.scheduleDate,
       });
     }

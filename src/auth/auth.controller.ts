@@ -20,14 +20,6 @@ export class AuthController {
     private jwtService: JwtService,
   ) {}
 
-  // @HttpCode(HttpStatus.OK)
-  // @Post('login')
-  // async login(@Body() body: any, @Query('workspaceId') workspaceId?: number) {
-  //   console.log(body);
-  //   const { credential } = body;
-  //   return this.authService.login(credential, workspaceId);
-  // }
-
   @HttpCode(HttpStatus.OK)
   @Post('google/callback/:uniqueToken')
   async receiveGoogleCallbackWithToken(
@@ -40,15 +32,14 @@ export class AuthController {
 
     // login에서 JWT 토큰 반환
     const jwtToken = await this.authService.login(credential, uniqueToken);
-
-    // 쿠키 설정 (JavaScript로 접근할 수 없는 HTTP-only 쿠키)
-    res.cookie('ACCESS_KEY', jwtToken.access_token, {
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-      domain: 'localhost',
-    });
-
-    res.redirect('http://localhost:3000');
+    // return res.json(jwtToken);
+    // 쿠키 설정
+    // res.cookie('ACCESS_KEY', jwtToken.access_token, {
+    //   httpOnly: true,
+    //   maxAge: 1000 * 60 * 60 * 24 * 7,
+    //   domain: 'localhost',
+    // });
+    res.redirect(`http://localhost:3000?access_token=${jwtToken.access_token}`);
   }
 
   @HttpCode(HttpStatus.OK)
@@ -63,14 +54,6 @@ export class AuthController {
 
     // login에서 JWT 토큰 반환
     const jwtToken = await this.authService.login(credential, uniqueToken);
-
-    // 쿠키 설정 (JavaScript로 접근할 수 없는 HTTP-only 쿠키)
-    res.cookie('ACCESS_KEY', jwtToken.access_token, {
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-      domain: 'localhost',
-    });
-
-    res.redirect('http://localhost:3000');
+    res.redirect(`http://localhost:3000?access_token=${jwtToken.access_token}`);
   }
 }

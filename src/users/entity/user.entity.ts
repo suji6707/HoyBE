@@ -1,3 +1,4 @@
+import { Comment } from 'src/comment/entity/comment.entity';
 import { Group } from 'src/group/entity/group.entity';
 import { Task } from 'src/task/entity/task.entity';
 import { WorkspaceMember } from 'src/workspace/entity/workspace_member.entity';
@@ -35,17 +36,21 @@ export class User {
   @Column({ length: 511, nullable: true }) // 소셜로그인
   token?: string;
 
-  // 워크스페이스 : 유저 매핑 테이블
+  // Workspace 매핑
   @OneToMany(() => WorkspaceMember, (workspaceMember) => workspaceMember.member)
   workspaceMembers: WorkspaceMember[];
 
-  // 그룹 매핑
+  // Group 매핑
   @ManyToMany(() => Group, (group) => group.members)
   groups: Group[];
 
   // Todo 매핑
   @OneToMany(() => Task, (task) => task.user)
   tasks: Task[];
+
+  // Comment 매핑
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
 
   @CreateDateColumn()
   createdAt!: Date;

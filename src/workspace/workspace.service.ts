@@ -68,15 +68,19 @@ export class WorkspaceService {
     await this.workspaceMemberRepo.save(workspaceMember);
 
     // Workspace 업데이트
-    workspace.memberCount += 1;
-    await this.workspaceMemberRepo.save(workspace);
-
-    // workspaceInvitation 객체 생성, pending -> accepted
-    const workspaceInvitation = await this.invitationRepo.findOne({
-      where: { uniqueToken: uniqueToken },
+    await this.workspaceRepo.update(workspaceId, {
+      memberCount: () => 'memberCount + 1',
     });
-    workspaceInvitation.status = InvitationStatus.ACCEPTED;
-    await this.invitationRepo.save(workspaceInvitation);
+
+    // workspaceInvitation 업데이트
+    await this.invitationRepo.update(uniqueToken, {
+      status: () => InvitationStatus.ACCEPTED,
+    });
+    // const workspaceInvitation = await this.invitationRepo.findOne({
+    //   where: { uniqueToken: uniqueToken },
+    // });
+    // workspaceInvitation.status = InvitationStatus.ACCEPTED;
+    // await this.invitationRepo.save(workspaceInvitation);
 
     return workspaceMember;
   }
