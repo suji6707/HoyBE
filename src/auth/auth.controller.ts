@@ -30,6 +30,29 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('google/callback/:uniqueToken')
+  async receiveGoogleCallbackWithToken(
+    @Body() loginDto: LoginDto,
+    @Res() res: Response,
+    @Param('uniqueToken') uniqueToken?: string,
+  ) {
+    // 구글 credential 정보
+    const { credential } = loginDto;
+
+    // login에서 JWT 토큰 반환
+    const jwtToken = await this.authService.login(credential, uniqueToken);
+
+    // 쿠키 설정 (JavaScript로 접근할 수 없는 HTTP-only 쿠키)
+    res.cookie('ACCESS_KEY', jwtToken.access_token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      domain: 'localhost',
+    });
+
+    res.redirect('http://localhost:3000');
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('google/callback')
   async receiveGoogleCallback(
     @Body() loginDto: LoginDto,
     @Res() res: Response,
