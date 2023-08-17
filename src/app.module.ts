@@ -11,6 +11,7 @@ import { GroupModule } from './group/group.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { AppService } from './app.service';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AppService } from './app.service';
         },
       },
     }),
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

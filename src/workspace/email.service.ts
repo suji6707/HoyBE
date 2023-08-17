@@ -52,9 +52,10 @@ export class EmailService {
     // 링크 생성. 아래 도메인 GET 요청으로
     // 1. hoy.im 사이트 이동 및 구글 로그인
     // 2. accept 절차 진행
-    // const invitationLink = `${process.env.DOMAIN}/accept/${uniqueToken}`;
-    // const invitationLink = `${process.env.DOMAIN}/testLogin/${workspaceId}`;
-    const invitationLink = `${process.env.DOMAIN}/auth/google/callback/${workspaceId}`;
+    // const invitationLink = `${process.env.SERVER_DOMAIN}/accept/${uniqueToken}`;
+    // const invitationLink = `${process.env.SERVER_DOMAIN}/testLogin/${workspaceId}`;
+    const invitationLink = `${process.env.SERVER_DOMAIN}/auth/google/callback/${uniqueToken}`;
+    console.log('fr: 이메일 초대링크: ', invitationLink);
 
     this.mailerService
       .sendMail({
@@ -70,24 +71,6 @@ export class EmailService {
       .catch((err) => {
         console.log(err);
       });
-  }
-
-  async addUserToWorkspace(user: User, workspaceId: number) {
-    // 필요한 정보들
-    const workspace = await this.workspaceRepo.findOne({
-      where: { id: workspaceId },
-    });
-
-    // WorkspaceMember 객체 생성
-    const workspaceMember = new WorkspaceMember();
-    workspaceMember.workspace = workspace;
-    workspaceMember.member = user;
-    workspaceMember.nickname = user.name; // 구글 로그인 이름 넣기
-
-    // 해당 유저를 member로 추가 (매핑테이블)
-    await this.workspaceMemberRepo.save(workspaceMember);
-
-    return workspaceMember;
   }
 }
 
@@ -108,15 +91,3 @@ export class EmailService {
 // workspaceInvitation = invitationRepo.findOne(email)
 // workspaceInvitation.status = ACCEPTED (enum 처리)
 // invitationRepo.save(workspaceInvitation)
-
-// if (user) {
-//   // 이미 존재하는 유저면 addUserToWorkspace() 호출
-//   await this.addUserToWorkspace(user, workspaceId);
-//   return { success: true };
-// } else {
-//   // workspaceId를 세션에 저장 후 유저를 로그인으로 리다이렉트
-//   return {
-//     success: false,
-//     url: `${process.env.DOMAIN}/auth/login?workspaceId=${workspaceId}`,
-//   };
-// }

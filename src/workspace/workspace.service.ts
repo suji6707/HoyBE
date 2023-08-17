@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Workspace } from './entity/workspace.entity';
 import { CreateWorkspaceDto } from './dtos/create-workspace.dto';
 import { User } from 'src/users/entity/user.entity';
 import { WorkspaceMember } from './entity/workspace_member.entity';
+import { WorkspaceInvitation } from './entity/workspace_invitations.entity';
+import { InvitationStatus } from './entity/workspace_invitations.entity';
 
 @Injectable()
 export class WorkspaceService {
@@ -12,6 +14,8 @@ export class WorkspaceService {
     @InjectRepository(Workspace) private workspaceRepo: Repository<Workspace>,
     @InjectRepository(WorkspaceMember)
     private workspaceMemberRepo: Repository<WorkspaceMember>,
+    @InjectRepository(WorkspaceInvitation)
+    private invitationRepo: Repository<WorkspaceInvitation>,
     @InjectRepository(User) private userRepo: Repository<User>,
   ) {}
 
@@ -43,7 +47,39 @@ export class WorkspaceService {
     return workspace;
   }
 
-  async addUserToWorkspace() {}
+  async addUserToWorkspace(
+    user: User,
+    workspaceId: number,
+    uniqueToken?: string,
+  ) {
+    // workspace 조회 및 예외처리
+    const workspace = await this.workspaceRepo.findOne({
+      where: { id: workspaceId },
+    });
+    if (!workspace) {
+      throw new NotFoundException('해당 워크스페이스를 찾을 수 없습니다');
+    }
+
+    // WorkspaceMember 객체 생성
+    const workspaceMember = new WorkspaceMember();
+    workspaceMember.workspace = workspace;
+    workspaceMember.member = user;
+    workspaceMember.nickname = user.name; // 구글 로그인 이름 넣기
+    await this.workspaceMemberRepo.save(workspaceMember);
+
+    // Workspace 업데이트
+    workspace.memberCount += 1;
+    await this.workspaceMemberRepo.save(workspace);
+
+    // workspaceInvitation 객체 생성, pending -> accepted
+    const workspaceInvitation = await this.invitationRepo.findOne({
+      where: { uniqueToken: uniqueToken },
+    });
+    workspaceInvitation.status = InvitationStatus.ACCEPTED;
+    await this.invitationRepo.save(workspaceInvitation);
+
+    return workspaceMember;
+  }
 
   async findWorkspaceById(workspaceId: number) {
     const workspace = await this.workspaceRepo.findOne({

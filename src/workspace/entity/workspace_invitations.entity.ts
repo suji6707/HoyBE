@@ -11,7 +11,7 @@ import {
 import { Workspace } from './workspace.entity';
 import { User } from 'src/users/entity/user.entity';
 
-enum InvitationStatus {
+export enum InvitationStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
 }

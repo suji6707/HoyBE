@@ -1,22 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entity/user.entity';
-import { EmailService } from 'src/workspace/email.service';
 import { Repository } from 'typeorm';
 import 'dotenv/config';
 import { LoginTicket, OAuth2Client } from 'google-auth-library';
 import { error } from 'console';
+import { WorkspaceService } from 'src/workspace/workspace.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
     private jwtService: JwtService,
-    private emailService: EmailService,
+    private workspaceService: WorkspaceService,
   ) {}
 
-  async login(credential: string, workspaceId?: number) {
+  async login(credential: string, uniqueToken?: string) {
     // googleId, email, name, imgUrl 변수에 담는다
     const result = await this.getDecodedJwtGoogle(credential);
     const googlePayload = (result as LoginTicket).getPayload();
@@ -51,10 +51,27 @@ export class AuthService {
     user.token = access_token;
     await this.userRepo.save(user);
 
-    if (workspaceId) {
-      await this.emailService.addUserToWorkspace(user, workspaceId);
+    let workspaceId: number;
+    let invitedEmail: string;
+
+    if (uniqueToken) {
+      const decoded = await this.jwtService.verifyAsync(uniqueToken);
+      workspaceId = decoded.workspaceId;
+      invitedEmail = decoded.email;
+
+      // 유저 인증: 실제 로그인 유저(credential. email)과 초대된 유저(login()파라미터)가 같은지 확인
+      if (email !== invitedEmail) {
+        console.log(email, invitedEmail);
+        throw new BadRequestException('로그인한 유저와 초대된 유저가 다릅니다');
+      }
+
+      await this.workspaceService.addUserToWorkspace(
+        user,
+        workspaceId,
+        uniqueToken,
+      );
     }
-    console.log('hi1: 두 번 호출되는지 체크', access_token);
+
     // 클라이언트에 토큰 반환
     return { access_token: access_token };
   }
