@@ -1,9 +1,12 @@
 import {
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Workspace } from './workspace.entity';
 import { User } from 'src/users/entity/user.entity';
@@ -29,4 +32,13 @@ export class WorkspaceMember {
   // accpetInvitation() 함수에서 User.name을 nickname에 넣을 예정.
   @Column({ length: 127, nullable: true })
   nickname?: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+
+  @DeleteDateColumn()
+  deletedAt!: Date;
 }

@@ -52,7 +52,9 @@ export class EmailService {
     // 링크 생성. 아래 도메인 GET 요청으로
     // 1. hoy.im 사이트 이동 및 구글 로그인
     // 2. accept 절차 진행
-    const invitationLink = `${process.env.DOMAIN}/accept/${uniqueToken}`;
+    // const invitationLink = `${process.env.DOMAIN}/accept/${uniqueToken}`;
+    // const invitationLink = `${process.env.DOMAIN}/testLogin/${workspaceId}`;
+    const invitationLink = `${process.env.DOMAIN}/auth/google/callback/${workspaceId}`;
 
     this.mailerService
       .sendMail({
