@@ -39,7 +39,9 @@ export class AuthController {
     //   maxAge: 1000 * 60 * 60 * 24 * 7,
     //   domain: 'localhost',
     // });
-    res.redirect(`http://localhost:3000?access_token=${jwtToken.access_token}`);
+    res.redirect(
+      `http://localhost:3000/login?access_token=${jwtToken.access_token}`,
+    );
   }
 
   @HttpCode(HttpStatus.OK)
@@ -54,6 +56,8 @@ export class AuthController {
 
     // login에서 JWT 토큰 반환
     const jwtToken = await this.authService.login(credential, uniqueToken);
-    res.redirect(`http://localhost:3000?access_token=${jwtToken.access_token}`);
+    res.redirect(
+      `http://localhost:3000/login?access_token=${jwtToken.access_token}`,
+    );
   }
 }

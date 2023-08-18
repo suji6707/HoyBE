@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -50,5 +52,22 @@ export class TaskController {
       date,
     );
     return tasks;
+  }
+
+  // task 수정
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Put(':taskId')
+  async updateTask(
+    @Param('taskId') taskId: number,
+    @Body() createTaskDto: CreateTaskDto,
+  ) {
+    return await this.taskService.updateTask(taskId, createTaskDto);
+  }
+
+  // task 삭제
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Delete(':taskId')
+  async deleteTask(@Param('taskId') taskId: number) {
+    return await this.taskService.deleteTask(taskId);
   }
 }

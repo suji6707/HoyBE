@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Between, Repository } from 'typeorm';
-import { addDays, parseISO, subDays, format } from 'date-fns';
+import { Repository } from 'typeorm';
+import { addDays, parseISO, subDays } from 'date-fns';
 import { Task } from 'src/task/entity/task.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ko } from 'date-fns/locale';
-import { TaskResponse } from './interface/task.interface';
 import { CreateTaskDto } from './dtos/create-task.dto';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import { User } from 'src/users/entity/user.entity';
+import { UpdateTaskDto } from './dtos/update-task.dto';
 
 @Injectable()
 export class TaskService {
@@ -49,7 +48,7 @@ export class TaskService {
     workspaceId: number,
     userId: number,
     dateQuery?: string,
-  ): Promise<TaskResponse[]> {
+  ): Promise<Task[]> {
     let selectedDate;
     if (dateQuery) {
       // 쿼리 문자열에서 받은 날짜 파싱
@@ -63,57 +62,48 @@ export class TaskService {
     const endDate = addDays(selectedDate, 1);
 
     // 해당 워크스페이스, 유저, 날짜 범위에 맞는 task 조회
-    const tasks = await this.taskRepo.find({
-      where: {
-        user: { id: userId },
-        workspace: { id: workspaceId },
-        scheduleDate: Between(startDate, endDate),
-      },
-      relations: ['user', 'workspace'], // 릴레이션은 JOIN ON과도 같음
+    const tasks = await this.taskRepo
+      .createQueryBuilder('task')
+      .where('task.workspaceId = :workspaceId', { workspaceId })
+      .andWhere('task.userId = :userId', { userId })
+      .andWhere('task.scheduleDate >= :startDate', { startDate })
+      .andWhere('task.scheduleDate <= :endDate', { endDate })
+      .orderBy('task.scheduleDate', 'ASC')
+      .getMany();
+
+    return tasks;
+  }
+
+  // Task 수정
+  async updateTask(taskId: number, updateTaskDto: UpdateTaskDto) {
+    const { title, priority, status } = updateTaskDto;
+
+    return await this.taskRepo.update(taskId, {
+      ...(title && { title: title }),
+      ...(priority && { priority: priority }),
+      ...(status && { status: status }),
     });
+  }
 
-    // 날짜 기준으로 그룹화된 결과를 저장할 배열
-    const result: TaskResponse[] = []; // 배열
-
-    for (const task of tasks) {
-      // 포멧 변경할 날짜
-      const formattedDate = new Date(task.scheduleDate);
-      // 키값 (문자열 형식 날짜)
-      const dateStr = format(formattedDate, 'yyyy-MM-dd');
-
-      let taskResponse = result.find((taskRes) => taskRes.date === dateStr);
-
-      if (!taskResponse) {
-        taskResponse = {
-          date: dateStr,
-          dayOfWeek: format(formattedDate, 'EEE', { locale: ko }),
-          day: format(formattedDate, 'M/d'),
-          dDay: false, // dueDate 로직에 따라 업데이트 필요
-          tasks: [],
-        };
-        result.push(taskResponse);
-      }
-      console.log('fr: result: ', result); // 같은 날짜면 두 번 뜸.
-
-      // tasks 배열 채우기
-      taskResponse.tasks.push({
-        id: task.id,
-        title: task.title,
-        userId: task.user.id,
-        priority: task.priority, // 0또는 1
-        done: task.status, // boolean
-        commentCount: task.commentCount,
-        scheduleDate: task.scheduleDate,
-      });
-    }
-
-    result.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-
-      return dateA.getTime() - dateB.getTime();
-    });
-
-    return result;
+  // Task 삭제
+  async deleteTask(taskId: number) {
+    return await this.taskRepo
+      .createQueryBuilder('task')
+      .softDelete()
+      .where('id = :id', { id: taskId })
+      .execute();
   }
 }
+
+// // property가 DTO에 담겨있을 때만 객체에 추가
+// if (updateTaskDto.title! == undefined) {
+//   updateData.title = updateTaskDto.title;
+// }
+// if (updateTaskDto.priority! == undefined) {
+//   updateData.priority = updateTaskDto.priority;
+// }
+// if (updateTaskDto.status! == undefined) {
+//   updateData.status = updateTaskDto.status;
+// }
+// console.log(updateData);
+// return await this.taskRepo.update(taskId, updateData);
