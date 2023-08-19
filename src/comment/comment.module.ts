@@ -11,5 +11,6 @@ import { WorkspaceModule } from 'src/workspace/workspace.module';
   imports: [TypeOrmModule.forFeature([User, Task, Comment]), WorkspaceModule],
   providers: [CommentService],
   controllers: [CommentController],
+  exports: [CommentService],
 })
 export class CommentModule {}

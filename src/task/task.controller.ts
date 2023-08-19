@@ -14,10 +14,14 @@ import { AuthGuard } from 'src/auth.guard';
 import { WorkspaceGuard } from 'src/workspace/workspace.guard';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dtos/create-task.dto';
+import { CommentService } from 'src/comment/comment.service';
 
 @Controller('workspace/:workspaceId/tasks')
 export class TaskController {
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private commentService: CommentService,
+  ) {}
 
   // task 생성
   @UseGuards(AuthGuard, WorkspaceGuard)
@@ -52,6 +56,16 @@ export class TaskController {
       date,
     );
     return tasks;
+  }
+
+  // task 상세 조회 (with Comments)
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Get(':taskId')
+  async viewTask(@Param('taskId') taskId: number, @Req() req) {
+    const userId = req.userId;
+    const task = await this.taskService.viewTask(taskId);
+    const comments = await this.commentService.viewComment(userId, taskId);
+    return { task, comments };
   }
 
   // task 수정

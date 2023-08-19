@@ -6,12 +6,14 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { Workspace } from './workspace.entity';
 import { User } from 'src/users/entity/user.entity';
 
 @Entity({ name: 'workspace_member' })
+@Unique('UQ_WORKSPACE_MEMBER', ['workspace', 'member'])
 export class WorkspaceMember {
   @PrimaryGeneratedColumn()
   id: number;

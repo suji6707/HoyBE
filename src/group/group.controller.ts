@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth.guard';
 import { CreateGroupDto } from './dtos/create-group.dto';
 import { GroupService } from './group.service';
@@ -12,6 +12,7 @@ export class GroupController {
 
   // 그룹 생성 (및 해당 유저 추가)
   @UseGuards(AuthGuard)
+  @Post()
   async createGroup(
     @Req() req,
     @Param('workspaceId') workspaceId: number,

@@ -35,14 +35,6 @@ export class CommentController {
   }
 
   @UseGuards(AuthGuard, WorkspaceGuard)
-  @Get()
-  async viewComment(@Param('taskId') taskId: number, @Req() req) {
-    const userId = req.userId;
-    const commentList = await this.commentService.viewComment(userId, taskId);
-    return commentList;
-  }
-
-  @UseGuards(AuthGuard, WorkspaceGuard)
   @Put(':commentId')
   async updateComment(
     @Param('commentId') commentId: number,

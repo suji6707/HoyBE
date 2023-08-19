@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Workspace } from './entity/workspace.entity';
@@ -28,17 +32,28 @@ export class WorkspaceService {
 
     // 워크스페이스 객체 생성 (Workspace 테이블)
     const { name } = createWorkspaceDto;
+    // 해당 유저가 만든 워크스페이스 이름 중 동일한 이름이 있으면 Conflict error
+    const savedWorkspace = await this.workspaceRepo.findOne({
+      where: {
+        name: name,
+        host: { id: userId },
+      },
+      relations: ['host'],
+    });
+    if (savedWorkspace) {
+      throw new ConflictException('이미 존재하는 워크스페이스입니다');
+    }
+
+    // workspace 저장
     workspace.name = name;
     workspace.host = user;
-    // workspace.memberCount = 1; // 처음 생성할 때는 host 1명. save시 default:1 값이 들어오므로 현재 NaN에 integer를 할당할 수 없음
-
-    // workspace 저장 (이 단계에서 workspace 객체가 DB id를 얻게 됨)
     await this.workspaceRepo.save(workspace);
 
     // WorkspaceMember 객체 생성
     const workspaceMember = new WorkspaceMember();
     workspaceMember.workspace = workspace;
     workspaceMember.member = user;
+    workspaceMember.nickname = user.name;
 
     // 해당 유저를 member로 추가 (매핑테이블)
     await this.workspaceMemberRepo.save(workspaceMember);
@@ -47,6 +62,7 @@ export class WorkspaceService {
     return workspace;
   }
 
+  // 이메일 초대를 통한 추가
   async addUserToWorkspace(
     user: User,
     workspaceId: number,

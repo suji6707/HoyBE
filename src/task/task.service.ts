@@ -74,6 +74,12 @@ export class TaskService {
     return tasks;
   }
 
+  // Task 상세 조회
+  async viewTask(taskId: number) {
+    const task = await this.taskRepo.findOne({ where: { id: taskId } });
+    return task;
+  }
+
   // Task 수정
   async updateTask(taskId: number, updateTaskDto: UpdateTaskDto) {
     const { title, priority, status } = updateTaskDto;
