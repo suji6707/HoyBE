@@ -4,17 +4,17 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { WorkspaceService } from './workspace.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { WorkspaceMember } from './entity/workspace_member.entity';
+import { WorkspaceMember } from './workspace/entity/workspace_member.entity';
 import { Repository } from 'typeorm';
+import { Workspace } from './workspace/entity/workspace.entity';
 
 @Injectable()
 export class WorkspaceGuard implements CanActivate {
   constructor(
     @InjectRepository(WorkspaceMember)
     private workspaceMemberRepo: Repository<WorkspaceMember>,
-    private workspaceService: WorkspaceService,
+    @InjectRepository(Workspace) private workspaceRepo: Repository<Workspace>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -23,9 +23,7 @@ export class WorkspaceGuard implements CanActivate {
     const workspaceId = Number(request.params.workspaceId);
 
     // 해당 워크스페이스 조회
-    const workspace = await this.workspaceService.findWorkspaceById(
-      workspaceId,
-    );
+    const workspace = await this.findWorkspaceById(workspaceId);
     if (!workspace) {
       throw new UnauthorizedException('Workspace not found');
     }
@@ -41,5 +39,12 @@ export class WorkspaceGuard implements CanActivate {
 
     console.log('fr: WorkspaceGuard 통과');
     return true;
+  }
+
+  private async findWorkspaceById(workspaceId: number) {
+    const workspace = await this.workspaceRepo.findOne({
+      where: { id: workspaceId },
+    });
+    return workspace;
   }
 }

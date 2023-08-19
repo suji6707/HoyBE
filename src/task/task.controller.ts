@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/auth.guard';
-import { WorkspaceGuard } from 'src/workspace/workspace.guard';
+import { WorkspaceGuard } from 'src/workspace.guard';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dtos/create-task.dto';
 import { CommentService } from 'src/comment/comment.service';

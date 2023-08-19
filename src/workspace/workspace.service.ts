@@ -92,19 +92,7 @@ export class WorkspaceService {
     await this.invitationRepo.update(uniqueToken, {
       status: () => InvitationStatus.ACCEPTED,
     });
-    // const workspaceInvitation = await this.invitationRepo.findOne({
-    //   where: { uniqueToken: uniqueToken },
-    // });
-    // workspaceInvitation.status = InvitationStatus.ACCEPTED;
-    // await this.invitationRepo.save(workspaceInvitation);
 
     return workspaceMember;
-  }
-
-  async findWorkspaceById(workspaceId: number) {
-    const workspace = await this.workspaceRepo.findOne({
-      where: { id: workspaceId },
-    });
-    return workspace;
   }
 }

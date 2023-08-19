@@ -7,3 +7,11 @@ export class CreateGroupDto {
   @IsOptional()
   memberIds: number[]; // 프론트에서 userId로 받도록
 }
+
+export class UpdateGroupDto {
+  @IsOptional()
+  name: string;
+
+  @IsOptional()
+  memberIds: number[]; // 프론트에서 userId로 받도록
+}

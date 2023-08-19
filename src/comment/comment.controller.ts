@@ -12,7 +12,7 @@ import {
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import { AuthGuard } from 'src/auth.guard';
-import { WorkspaceGuard } from 'src/workspace/workspace.guard';
+import { WorkspaceGuard } from 'src/workspace.guard';
 
 @Controller('workspace/:workspaceId/tasks/:taskId/comment')
 export class CommentController {

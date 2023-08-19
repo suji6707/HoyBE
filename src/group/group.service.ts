@@ -4,18 +4,21 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateGroupDto } from './dtos/create-group.dto';
+import { CreateGroupDto, UpdateGroupDto } from './dtos/create-group.dto';
 import { Group } from './entity/group.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import { User } from 'src/users/entity/user.entity';
+import { WorkspaceMember } from 'src/workspace/entity/workspace_member.entity';
 
 @Injectable()
 export class GroupService {
   constructor(
     @InjectRepository(Group) private groupRepo: Repository<Group>,
     @InjectRepository(Workspace) private workspaceRepo: Repository<Workspace>,
+    @InjectRepository(WorkspaceMember)
+    private workspaceMemberRepo: Repository<WorkspaceMember>,
     @InjectRepository(User) private userRepo: Repository<User>,
   ) {}
 
@@ -55,7 +58,6 @@ export class GroupService {
   }
 
   // 그룹에 유저 초대 (여러명 입력)
-  // POST /workspace/{workspaceId}/group/{groupId}/members
   async addUserToGroup(group: Group, memberIds: number[]) {
     for (const memberId of memberIds) {
       // 해당 유저가 이미 그룹 멤버인지 확인
@@ -71,6 +73,42 @@ export class GroupService {
     console.log('fr: group.members: ', group.members);
 
     await this.groupRepo.save(group);
+  }
+
+  // 그룹 모달창
+  async getAvailableUsers(
+    userId: number,
+    workspaceId: number,
+    groupId: number,
+  ) {
+    // 워크스페이스 멤버 가져오기
+    const workspaceMembers = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .select(['workspaceMember.member.id', 'workspaceMember.member'])
+      .innerJoin(User, 'user', 'workspaceMember.member.id = user.id')
+      .where('workspaceMember.workspace.id = :workspaceId', { workspaceId })
+      .getMany();
+
+    return workspaceMembers;
+  }
+
+  // 그룹 수정
+  async updateGroup(groupId: number, updateGroupDto: UpdateGroupDto) {
+    const { name, memberIds } = updateGroupDto;
+
+    // groupId 기준으로 그룹을 찾는다
+    // const group = await this.groupRepo.findOne({ where: { id: groupId } });
+    // if (!group) {
+    //   throw new NotFoundException('해당 그룹이 존재하지 않습니다');
+    // }
+
+    // group 존재 여부
+    const count = await this.groupRepo.count({ where: { id: groupId } });
+    if (count === 0) {
+      throw new NotFoundException('해당 그룹이 존재하지 않습니다');
+    }
+
+    // name 수정 (있으면)
   }
 }
 
@@ -98,3 +136,16 @@ members: [userId1, userId2, ...]
  * 
  * 
  *  */
+
+/* SELECT 
+    workspaceMember.member.id AS memberId,
+    user.name AS username
+  FROM 
+    workspace_member workspaceMember
+  INNER JOIN
+    User ON workspaceMember.member_id = user.id
+  WHERE
+    workspaceMember.workspace_id = :workspaceId;
+  member.name FROM workspace_member workspaceMember
+// WHERE workspaceMember
+*/

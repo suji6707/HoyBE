@@ -31,7 +31,7 @@ export class WorkspaceMember {
   member: User;
 
   // 워크스페이스마다 닉네임 설정 가능
-  // accpetInvitation() 함수에서 User.name을 nickname에 넣을 예정.
+  // accpetInvitation() 함수에서 User.name을 nickname에 넣음.
   @Column({ length: 127, nullable: true })
   nickname?: string;
 
