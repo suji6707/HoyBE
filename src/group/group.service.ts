@@ -77,11 +77,7 @@ export class GroupService {
   }
 
   // 워크스페이스 유저 조회 (그룹 생성시 모달창)
-  async getAvailableUsers(
-    // userId: number,
-    workspaceId: number,
-  ) {
-    console.log('fr: workspaceId', workspaceId);
+  async getAvailableUsers(workspaceId: number) {
     // 워크스페이스 멤버 가져오기
     const query = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
@@ -93,6 +89,7 @@ export class GroupService {
       )
       .innerJoin('workspaceMember.member', 'user')
       .select('user.id', 'userId')
+      .addSelect('user.imgUrl', 'imgUrl')
       .addSelect('workspaceMember.nickname', 'nickname');
 
     // console.log(query.getSql());
@@ -139,6 +136,40 @@ export class GroupService {
     return groupMemberIds;
   }
 
+  // 수정 모달창 전처리: flag 처리 (기 초대된 유저)
+  async addFlagToWorkspaceMembers(availableUsers, groupMembers) {
+    // groupMembers의 userId 목록 생성
+    const groupMemberIds = groupMembers.map((member) => member.userId);
+    // workspaceMembers에 flag 추가
+    const workspaceMembersWithFlag = availableUsers.map((member) => {
+      return {
+        ...member,
+        flag: groupMemberIds.includes(member.userId),
+      };
+    });
+
+    return workspaceMembersWithFlag;
+  }
+
+  // 수정 모달창 전처리: workspaceMembers에 내 정보 표시
+  async addMeToWorkspaceMembers(workspaceMembers, userId: number) {
+    // 나에 해당하는 유저 정보를 workspaceMembers에서 조회
+    const meIndex = workspaceMembers.findIndex(
+      (member) => member.userId === userId,
+    );
+    if (meIndex !== -1) {
+      const me = workspaceMembers[meIndex];
+      // nickname에 (나) 표시
+      me.nickname += ' (나)';
+
+      // 배열에서 기존 삭제
+      workspaceMembers.splice(meIndex, 1);
+      // 배열 맨 앞에 추가
+      workspaceMembers.unshift(me);
+    }
+    return workspaceMembers;
+  }
+
   // 그룹 수정
   async updateGroup(groupId: number, updateGroupDto: UpdateGroupDto) {
     const { name, addMemberIds, removeMemberIds } = updateGroupDto;
@@ -151,12 +182,10 @@ export class GroupService {
     if (!group) {
       throw new NotFoundException('해당 그룹이 존재하지 않습니다');
     }
-
     // name 수정
     if (name) {
       group.name = name;
     }
-
     // 추가할 멤버 설정
     if (addMemberIds && addMemberIds.length > 0) {
       const newMembers = await this.userRepo
@@ -168,14 +197,12 @@ export class GroupService {
 
       group.members.push(...newMembers);
     }
-
     // 삭제할 멤버 설정
     if (removeMemberIds && removeMemberIds.length > 0) {
       group.members = group.members.filter(
         (member) => !removeMemberIds.includes(member.id),
       );
     }
-
     // DB 저장
     return await this.groupRepo.save(group);
   }

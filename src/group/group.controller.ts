@@ -40,13 +40,16 @@ export class GroupController {
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get()
   async getAvailableUsers(
-    // @Req() req,
+    @Req() req,
     @Param('workspaceId') workspaceId: number,
   ) {
-    // const userId = req.userId;
-    const workspaceMembers = await this.groupService.getAvailableUsers(
-      // userId, // 자신을 제외한 모든 멤버 - innerJoinSelect로 바꿔서 user.id !== userId로.
+    const userId = req.userId;
+    const availableUsers = await this.groupService.getAvailableUsers(
       workspaceId,
+    );
+    const workspaceMembers = await this.groupService.addMeToWorkspaceMembers(
+      availableUsers,
+      userId,
     );
     return { workspaceMembers };
   }
@@ -56,19 +59,30 @@ export class GroupController {
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get(':groupId')
   async getAvailableUsersWithGroup(
-    // @Req() req,
+    @Req() req,
     @Param('workspaceId') workspaceId: number,
     @Param('groupId') groupId: number,
   ) {
-    // const userId = req.userId;
-    const workspaceMembers = await this.groupService.getAvailableUsers(
-      // userId, // 자신을 제외한 모든 멤버 - innerJoinSelect로 바꿔서 user.id !== userId로.
+    const userId = req.userId;
+    const availableUsers = await this.groupService.getAvailableUsers(
       workspaceId,
     );
     const groupMembers = await this.groupService.getGroupMembers(
       groupId,
       workspaceId,
     );
+
+    const availableUsersWithFlag =
+      await this.groupService.addFlagToWorkspaceMembers(
+        availableUsers,
+        groupMembers,
+      );
+
+    const workspaceMembers = await this.groupService.addMeToWorkspaceMembers(
+      availableUsersWithFlag,
+      userId,
+    );
+
     return { workspaceMembers, groupMembers };
   }
 
