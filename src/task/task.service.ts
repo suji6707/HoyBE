@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { addDays, parseISO, subDays } from 'date-fns';
 import { Task } from 'src/task/entity/task.entity';
@@ -94,14 +94,27 @@ export class TaskService {
     return task;
   }
 
-  // Task 수정
-  async updateTask(taskId: number, updateTaskDto: UpdateTaskDto) {
-    const { title, priority, status } = updateTaskDto;
+  // Task 수정 - 완료 표시
+  async updateTaskStatus(taskId: number) {
+    const task = await this.taskRepo.findOne({ where: { id: taskId } });
+
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${taskId} not found`);
+    }
+
+    return await this.taskRepo.update(taskId, {
+      status: !task.status,
+    });
+  }
+
+  // Task 수정 - 디테일 수정
+  async updateTaskDetail(taskId: number, updateTaskDto: UpdateTaskDto) {
+    const { title, priority } = updateTaskDto;
+    console.log(title, priority);
 
     return await this.taskRepo.update(taskId, {
       ...(title && { title: title }),
-      ...(priority && { priority: priority }),
-      ...(status && { status: status }),
+      ...(typeof priority !== undefined && { priority: priority }),
     });
   }
 

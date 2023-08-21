@@ -15,6 +15,7 @@ import { WorkspaceGuard } from 'src/workspace.guard';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dtos/create-task.dto';
 import { CommentService } from 'src/comment/comment.service';
+import { UpdateTaskDto } from './dtos/update-task.dto';
 
 @Controller('workspace/:workspaceId/tasks')
 export class TaskController {
@@ -56,7 +57,7 @@ export class TaskController {
     return tasks;
   }
 
-  // 그룹 멤버 - 한 유저의 tasks 조회 ***********************************
+  // 그룹 멤버 - 한 유저의 tasks 조회
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get('member/:userId')
   async getTasksByUser(
@@ -82,14 +83,22 @@ export class TaskController {
     return { task, comments };
   }
 
-  // task 수정
+  // task 수정 - todo 완료 표시
   @UseGuards(AuthGuard, WorkspaceGuard)
-  @Put(':taskId')
-  async updateTask(
+  @Put(':taskId/status')
+  async updateTaskStatus(@Param('taskId') taskId: number) {
+    return await this.taskService.updateTaskStatus(taskId);
+  }
+
+  // task 수정 - todo 디테일 수정
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Put(':taskId/detail')
+  async updateTaskDetail(
     @Param('taskId') taskId: number,
-    @Body() createTaskDto: CreateTaskDto,
+    @Body() updateTaskDto: UpdateTaskDto,
   ) {
-    return await this.taskService.updateTask(taskId, createTaskDto);
+    console.log('fr: updateTaskDto: ', updateTaskDto);
+    return await this.taskService.updateTaskDetail(taskId, updateTaskDto);
   }
 
   // task 삭제

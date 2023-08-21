@@ -1,4 +1,4 @@
-import { IsBoolean, IsNumber, IsOptional } from 'class-validator';
+import { IsNumber, IsOptional } from 'class-validator';
 
 export class UpdateTaskDto {
   @IsOptional()
@@ -7,8 +7,4 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsNumber()
   priority?: number;
-
-  @IsOptional()
-  @IsBoolean()
-  status?: boolean;
 }
