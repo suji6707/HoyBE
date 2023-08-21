@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -93,5 +94,11 @@ export class GroupController {
       workspaceId,
     );
     return groupMembers;
+  }
+
+  // 그룹 삭제
+  @Delete(':groupId')
+  async deleteGroup(@Param('groupId') groupId: number) {
+    await this.groupService.deleteGroup(groupId);
   }
 }

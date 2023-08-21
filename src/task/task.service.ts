@@ -37,6 +37,7 @@ export class TaskService {
     task.workspace = workspace;
     task.user = user;
 
+    console.log('hi0', task.scheduleDate);
     return await this.taskRepo.insert(task);
   }
 
@@ -73,27 +74,15 @@ export class TaskService {
 
   // 날짜별 하루치 Task 조회
   async getTasksByUser(workspaceId: number, userId: number, date: string) {
-    const parseStringDate = (date: string): Date => {
-      const ISODate = new Date(date).toISOString();
-      return parseISO(ISODate);
-    };
-
-    const selectedDate = parseStringDate(date);
-    console.log('fr: ', selectedDate);
-
-    // const startDate = new Date(selectedDate);
-    // startDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(selectedDate);
-    endDate.setUTCHours(23, 59, 59, 999);
-    console.log('fr: ', selectedDate, endDate);
+    const selectedDate = parseISO(date);
+    const nextDate = addDays(selectedDate, 1);
 
     const tasks = await this.taskRepo
       .createQueryBuilder('task')
       .where('task.workspaceId = :workspaceId', { workspaceId })
       .andWhere('task.userId = :userId', { userId })
       .andWhere('task.scheduleDate >= :selectedDate', { selectedDate })
-      .andWhere('task.scheduleDate <= :endDate', { endDate })
+      .andWhere('task.scheduleDate < :nextDate', { nextDate })
       .getMany();
 
     return tasks;
@@ -125,16 +114,3 @@ export class TaskService {
       .execute();
   }
 }
-
-// // property가 DTO에 담겨있을 때만 객체에 추가
-// if (updateTaskDto.title! == undefined) {
-//   updateData.title = updateTaskDto.title;
-// }
-// if (updateTaskDto.priority! == undefined) {
-//   updateData.priority = updateTaskDto.priority;
-// }
-// if (updateTaskDto.status! == undefined) {
-//   updateData.status = updateTaskDto.status;
-// }
-// console.log(updateData);
-// return await this.taskRepo.update(taskId, updateData);

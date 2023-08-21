@@ -56,12 +56,12 @@ export class TaskController {
     return tasks;
   }
 
-  // 그룹 멤버 - 한 유저의 tasks 조회
+  // 그룹 멤버 - 한 유저의 tasks 조회 ***********************************
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get('member/:userId')
   async getTasksByUser(
-    @Param(':workspaceId') workspaceId: number,
-    @Param(':userId') userId: number,
+    @Param('workspaceId') workspaceId: number,
+    @Param('userId') userId: number,
     @Query('date') date: string,
   ) {
     const tasks = await this.taskService.getTasksByUser(

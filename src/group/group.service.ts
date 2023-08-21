@@ -180,7 +180,12 @@ export class GroupService {
     return await this.groupRepo.save(group);
   }
 
-  // 그룹 멤버들 todo 조회
-  // 1. getGroupMemberIds -> 해당 그룹에 포함된 userId 배열
-  // 2. 각 userId를 돌면서 todo 조회
+  // 그룹 삭제
+  async deleteGroup(groupId: number) {
+    return await this.groupRepo
+      .createQueryBuilder('group')
+      .delete()
+      .where('id = :id', { id: groupId })
+      .execute();
+  }
 }
