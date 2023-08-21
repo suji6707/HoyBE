@@ -4,13 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateGroupDto, UpdateGroupDto } from './dtos/create-group.dto';
+import { CreateGroupDto } from './dtos/create-group.dto';
 import { Group } from './entity/group.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import { User } from 'src/users/entity/user.entity';
 import { WorkspaceMember } from 'src/workspace/entity/workspace_member.entity';
+import { UpdateGroupDto } from './dtos/update-group.dto';
 
 @Injectable()
 export class GroupService {
@@ -50,7 +51,7 @@ export class GroupService {
     group.members = [user];
 
     // 해당 그룹 저장
-    await this.groupRepo.save(group); // tasks만 null 상태
+    await this.groupRepo.insert(group); // tasks만 null 상태
 
     await this.addUserToGroup(group, memberIds);
 
@@ -75,77 +76,111 @@ export class GroupService {
     await this.groupRepo.save(group);
   }
 
-  // 그룹 모달창
+  // 워크스페이스 유저 조회 (그룹 생성시 모달창)
   async getAvailableUsers(
-    userId: number,
+    // userId: number,
     workspaceId: number,
-    groupId: number,
   ) {
+    console.log('fr: workspaceId', workspaceId);
     // 워크스페이스 멤버 가져오기
-    const workspaceMembers = await this.workspaceMemberRepo
+    const query = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
-      .select(['workspaceMember.member.id', 'workspaceMember.member'])
-      .innerJoin(User, 'user', 'workspaceMember.member.id = user.id')
-      .where('workspaceMember.workspace.id = :workspaceId', { workspaceId })
-      .getMany();
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
+      .innerJoin('workspaceMember.member', 'user')
+      .select('user.id', 'userId')
+      .addSelect('workspaceMember.nickname', 'nickname');
 
+    // console.log(query.getSql());
+    const workspaceMembers = await query.getRawMany();
     return workspaceMembers;
+  }
+
+  // 그룹 유저 조회 (그룹 수정시 모달창)
+  async getGroupMembers(groupId: number, workspaceId: number) {
+    const groupMemberIds = await this.getGroupMemberIds(groupId);
+
+    const groupMembersWithNicknames = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
+      .innerJoin('workspaceMember.member', 'user')
+      .where('user.id IN (:...groupMemberIds)', {
+        groupMemberIds: groupMemberIds,
+      })
+      .select('user.id', 'userId')
+      .addSelect('user.imgUrl', 'imgUrl')
+      .addSelect('workspaceMember.nickname', 'nickname')
+      .getRawMany();
+
+    console.log('fr: ', groupMembersWithNicknames);
+    return groupMembersWithNicknames;
+  }
+
+  // 그룹 유저 id 조회
+  async getGroupMemberIds(groupId: number): Promise<number[]> {
+    const groupMembers = await this.groupRepo
+      .createQueryBuilder('group')
+      .innerJoin('group.members', 'users')
+      .where('group.id = :id', { id: groupId })
+      .select('users.id', 'userId')
+      .getRawMany();
+
+    // Extract the userIds into a new array
+    const groupMemberIds = groupMembers.map((member) => member.userId);
+    return groupMemberIds;
   }
 
   // 그룹 수정
   async updateGroup(groupId: number, updateGroupDto: UpdateGroupDto) {
-    const { name, memberIds } = updateGroupDto;
+    const { name, addMemberIds, removeMemberIds } = updateGroupDto;
 
-    // groupId 기준으로 그룹을 찾는다
-    // const group = await this.groupRepo.findOne({ where: { id: groupId } });
-    // if (!group) {
-    //   throw new NotFoundException('해당 그룹이 존재하지 않습니다');
-    // }
-
-    // group 존재 여부
-    const count = await this.groupRepo.count({ where: { id: groupId } });
-    if (count === 0) {
+    // groupId로 그룹 조회
+    const group = await this.groupRepo.findOne({
+      where: { id: groupId },
+      relations: ['members'],
+    });
+    if (!group) {
       throw new NotFoundException('해당 그룹이 존재하지 않습니다');
     }
 
-    // name 수정 (있으면)
+    // name 수정
+    if (name) {
+      group.name = name;
+    }
+
+    // 추가할 멤버 설정
+    if (addMemberIds && addMemberIds.length > 0) {
+      const newMembers = await this.userRepo
+        .createQueryBuilder('user')
+        .where('user.id IN (:...addMemberIds)', {
+          addMemberIds: addMemberIds,
+        })
+        .getMany();
+
+      group.members.push(...newMembers);
+    }
+
+    // 삭제할 멤버 설정
+    if (removeMemberIds && removeMemberIds.length > 0) {
+      group.members = group.members.filter(
+        (member) => !removeMemberIds.includes(member.id),
+      );
+    }
+
+    // DB 저장
+    return await this.groupRepo.save(group);
   }
+
+  // 그룹 멤버들 todo 조회
+  // 1. getGroupMemberIds -> 해당 그룹에 포함된 userId 배열
+  // 2. 각 userId를 돌면서 todo 조회
 }
-
-/**
- * 디테일
- * 그룹을 생성한 사람은 자동으로 그룹 멤버 배열에 추가됨.
- * -> 유저 배열로 저장할 때 중복을 방지하려면?
- * 
- * 1. 그룹 멤버 추가시 워크스페이스에 존재하는 모든 멤버 조회되어야 함.
- * 이 때 userId, user.name이 프론트에 보내져야 하고, 
- * 사용자를 추가할 때는 user.name 중 클릭 -> 해당 userId가 입력되도록.
- * 
- * 즉, 추가할 멤버들이 배열에 담겨서 백엔드로 전달되고.
- * 이것을 dto로 어떻게?
- * 
- * 입력되는 데이터:
- 
-groupName: " ",
-members: [userId1, userId2, ...]
--> group_member 매핑테이블에 관계가 추가되고,
-그룹을 클릭해서 조회하면 이 테이블을 기준으로
-그 그룹에 해당하는 유저들을 배열로 리턴할 수 있어야 함!
- * 
- * 
- * 
- * 
- *  */
-
-/* SELECT 
-    workspaceMember.member.id AS memberId,
-    user.name AS username
-  FROM 
-    workspace_member workspaceMember
-  INNER JOIN
-    User ON workspaceMember.member_id = user.id
-  WHERE
-    workspaceMember.workspace_id = :workspaceId;
-  member.name FROM workspace_member workspaceMember
-// WHERE workspaceMember
-*/

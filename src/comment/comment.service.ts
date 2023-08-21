@@ -30,7 +30,7 @@ export class CommentService {
     comment.task = task;
     comment.user = user;
     comment.text = text;
-    await this.commentRepo.save(comment);
+    await this.commentRepo.insert(comment);
 
     // Task DB 저장
     await this.taskRepo.update(taskId, {

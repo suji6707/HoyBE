@@ -26,31 +26,45 @@ export class TaskController {
   // task 생성
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Post()
-  async addTask(
+  async createTask(
     @Req() req,
     @Param('workspaceId') workspaceId: number,
     @Body() createTaskDto: CreateTaskDto,
-    @Query('date') date: string,
   ) {
     const userId = req.userId;
-    return await this.taskService.addTask(
+    return await this.taskService.createTask(
       workspaceId,
       userId,
       createTaskDto,
-      date,
     );
   }
 
-  // task 조회
+  // 나의 task 조회 (3일치)
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get()
-  async findTasksByDate(
+  async getTasksByDate(
     @Req() req,
     @Param('workspaceId') workspaceId: number,
     @Query('date') date?: string,
   ) {
     const userId = req.userId;
-    const tasks = await this.taskService.findTasksByDate(
+    const tasks = await this.taskService.getTasksByDate(
+      workspaceId,
+      userId,
+      date,
+    );
+    return tasks;
+  }
+
+  // 그룹 멤버 - 한 유저의 tasks 조회
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Get('member/:userId')
+  async getTasksByUser(
+    @Param(':workspaceId') workspaceId: number,
+    @Param(':userId') userId: number,
+    @Query('date') date: string,
+  ) {
+    const tasks = await this.taskService.getTasksByUser(
       workspaceId,
       userId,
       date,
@@ -61,9 +75,9 @@ export class TaskController {
   // task 상세 조회 (with Comments)
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get(':taskId')
-  async viewTask(@Param('taskId') taskId: number, @Req() req) {
+  async getTaskDetail(@Param('taskId') taskId: number, @Req() req) {
     const userId = req.userId;
-    const task = await this.taskService.viewTask(taskId);
+    const task = await this.taskService.getTaskDetail(taskId);
     const comments = await this.commentService.viewComment(userId, taskId);
     return { task, comments };
   }

@@ -17,15 +17,13 @@ export class TaskService {
   ) {}
 
   // Task 생성
-  async addTask(
+  async createTask(
     workspaceId: number,
     userId: number,
     createTaskDto: CreateTaskDto,
-    date: string, // DB 저장시엔 날짜로 변환
   ) {
     // 객체 저장에 필요한 정보들
-    console.log('fr: createTaskDto', createTaskDto);
-    const { title, priority, status } = createTaskDto;
+    const { title, priority, status, date } = createTaskDto;
     const workspace = await this.workspaceRepo.findOne({
       where: { id: workspaceId },
     });
@@ -39,12 +37,11 @@ export class TaskService {
     task.workspace = workspace;
     task.user = user;
 
-    await this.taskRepo.save(task);
-    return task;
+    return await this.taskRepo.insert(task);
   }
 
-  // 날짜별 Task 조회
-  async findTasksByDate(
+  // 날짜별 3일치 Task 조회
+  async getTasksByDate(
     workspaceId: number,
     userId: number,
     dateQuery?: string,
@@ -52,7 +49,7 @@ export class TaskService {
     let selectedDate;
     if (dateQuery) {
       // 쿼리 문자열에서 받은 날짜 파싱
-      selectedDate = parseISO(dateQuery);
+      selectedDate = parseISO(dateQuery); // 날짜로 변환
     } else {
       // 쿼리 스트링이 없을 경우 현재 날짜 사용
       selectedDate = new Date();
@@ -74,8 +71,36 @@ export class TaskService {
     return tasks;
   }
 
+  // 날짜별 하루치 Task 조회
+  async getTasksByUser(workspaceId: number, userId: number, date: string) {
+    const parseStringDate = (date: string): Date => {
+      const ISODate = new Date(date).toISOString();
+      return parseISO(ISODate);
+    };
+
+    const selectedDate = parseStringDate(date);
+    console.log('fr: ', selectedDate);
+
+    // const startDate = new Date(selectedDate);
+    // startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(selectedDate);
+    endDate.setUTCHours(23, 59, 59, 999);
+    console.log('fr: ', selectedDate, endDate);
+
+    const tasks = await this.taskRepo
+      .createQueryBuilder('task')
+      .where('task.workspaceId = :workspaceId', { workspaceId })
+      .andWhere('task.userId = :userId', { userId })
+      .andWhere('task.scheduleDate >= :selectedDate', { selectedDate })
+      .andWhere('task.scheduleDate <= :endDate', { endDate })
+      .getMany();
+
+    return tasks;
+  }
+
   // Task 상세 조회
-  async viewTask(taskId: number) {
+  async getTaskDetail(taskId: number) {
     const task = await this.taskRepo.findOne({ where: { id: taskId } });
     return task;
   }

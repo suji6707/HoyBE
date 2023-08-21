@@ -47,7 +47,7 @@ export class WorkspaceService {
     // workspace 저장
     workspace.name = name;
     workspace.host = user;
-    await this.workspaceRepo.save(workspace);
+    await this.workspaceRepo.insert(workspace);
 
     // WorkspaceMember 객체 생성
     const workspaceMember = new WorkspaceMember();
@@ -56,9 +56,8 @@ export class WorkspaceService {
     workspaceMember.nickname = user.name;
 
     // 해당 유저를 member로 추가 (매핑테이블)
-    await this.workspaceMemberRepo.save(workspaceMember);
+    await this.workspaceMemberRepo.insert(workspaceMember);
 
-    console.log('fr: workspace', workspace);
     return workspace;
   }
 
@@ -81,7 +80,7 @@ export class WorkspaceService {
     workspaceMember.workspace = workspace;
     workspaceMember.member = user;
     workspaceMember.nickname = user.name; // 구글 로그인 이름 넣기
-    await this.workspaceMemberRepo.save(workspaceMember);
+    await this.workspaceMemberRepo.insert(workspaceMember);
 
     // Workspace 업데이트
     await this.workspaceRepo.update(workspaceId, {
