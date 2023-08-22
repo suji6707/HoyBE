@@ -53,7 +53,7 @@ export class EmailService {
 
     // 클라이언트 - login/:uniqueToken 이 파라미터로 붙어있으면
     // const invitationLink = `${process.env.SERVER_DOMAIN}/auth/google/callback/${uniqueToken}`;
-    const invitationLink = `${process.env.DOMAIN}/login/${uniqueToken}`;
+    const invitationLink = `${process.env.DOMAIN}/login?uniqueToken=${uniqueToken}`;
     console.log('fr: 이메일 초대링크: ', invitationLink);
 
     this.mailerService
