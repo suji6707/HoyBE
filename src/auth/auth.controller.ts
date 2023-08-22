@@ -26,7 +26,7 @@ export class AuthController {
     // login에서 JWT 토큰 반환
     const jwtToken = await this.authService.login(credential, uniqueToken);
     res.redirect(
-      `http://localhost:3000/login?access_token=${jwtToken.access_token}`,
+      `${process.env.DOMAIN}/login?access_token=${jwtToken.access_token}`, // 배포 버전에선 vercel 주소로
     );
   }
 

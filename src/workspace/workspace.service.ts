@@ -95,6 +95,9 @@ export class WorkspaceService {
     return workspaceMember;
   }
 
+  // 내가 멤버로 속해있는 워크스페이스 조회
+  // async
+
   // 워크스페이스 멤버 조회
   async getAvailableUsers(workspaceId: number) {
     const query = await this.workspaceMemberRepo
