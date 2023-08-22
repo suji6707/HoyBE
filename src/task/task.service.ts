@@ -37,7 +37,6 @@ export class TaskService {
     task.workspace = workspace;
     task.user = user;
 
-    console.log('hi0', task.scheduleDate);
     return await this.taskRepo.insert(task);
   }
 
@@ -94,7 +93,7 @@ export class TaskService {
     return task;
   }
 
-  // Task 수정 - 완료 표시
+  // Task 수정 - 완료 여부 표시
   async updateTaskStatus(taskId: number) {
     const task = await this.taskRepo.findOne({ where: { id: taskId } });
 
@@ -102,9 +101,12 @@ export class TaskService {
       throw new NotFoundException(`Task with ID ${taskId} not found`);
     }
 
-    return await this.taskRepo.update(taskId, {
-      status: !task.status,
-    });
+    const updatedStatus = !task.status;
+    await this.taskRepo.update(taskId, { status: updatedStatus });
+
+    // 업데이트된 상태에 따라 done 설정
+    const done = updatedStatus ? 1 : 0;
+    return { done };
   }
 
   // Task 수정 - 디테일 수정

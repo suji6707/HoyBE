@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import 'dotenv/config';
 import { User } from 'src/users/entity/user.entity';
 import { Workspace } from './entity/workspace.entity';
-import { WorkspaceMember } from './entity/workspace_member.entity';
 
 @Injectable()
 export class EmailService {
@@ -16,7 +15,6 @@ export class EmailService {
     @InjectRepository(Workspace) private workspaceRepo: Repository<Workspace>,
     @InjectRepository(WorkspaceInvitation)
     private invitationRepo: Repository<WorkspaceInvitation>,
-    @InjectRepository(WorkspaceMember)
     private readonly mailerService: MailerService,
     private jwtService: JwtService,
   ) {}
@@ -42,7 +40,7 @@ export class EmailService {
     workspaceInvitation.workspace = workspace;
     workspaceInvitation.email = email; // 비회원이면 User 객체가 없기 때문에 email만 저장하는 걸로 통일
     workspaceInvitation.uniqueToken = uniqueToken;
-    await this.invitationRepo.save(workspaceInvitation);
+    await this.invitationRepo.insert(workspaceInvitation);
 
     // 워크스페이스 invitationCount
     await this.workspaceRepo.update(workspaceId, {
@@ -52,7 +50,10 @@ export class EmailService {
     // 링크 생성. 아래 도메인 GET 요청으로
     // 1. hoy.im 사이트 이동 및 구글 로그인
     // 2. accept 절차 진행
-    const invitationLink = `${process.env.SERVER_DOMAIN}/auth/google/callback/${uniqueToken}`;
+
+    // 클라이언트 - login/:uniqueToken 이 파라미터로 붙어있으면
+    // const invitationLink = `${process.env.SERVER_DOMAIN}/auth/google/callback/${uniqueToken}`;
+    const invitationLink = `${process.env.DOMAIN}/login/${uniqueToken}`;
     console.log('fr: 이메일 초대링크: ', invitationLink);
 
     this.mailerService

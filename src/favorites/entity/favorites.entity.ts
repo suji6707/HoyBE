@@ -1,44 +1,33 @@
 import { User } from 'src/users/entity/user.entity';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import {
-  Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'Group' })
-export class Group {
+@Entity({ name: 'Favorites' })
+@Unique('UQ_FAVORITE', ['workspace', 'source', 'target'])
+export class Favorites {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 127 })
-  name: string;
-
-  // group : workspace
-  @ManyToOne(() => Workspace, (workspace) => workspace.groups, {
-    cascade: true,
-  })
+  @ManyToOne(() => Workspace, (workspace) => workspace.favorites)
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'creator' })
-  creator: User;
+  @ManyToOne(() => User, (user) => user.favoritedBy)
+  @JoinColumn({ name: 'source' })
+  source: User;
 
-  @Column({ default: 1 })
-  memberCount: number;
-
-  // group : users
-  @ManyToMany(() => User, (user) => user.groups)
-  @JoinTable({ name: 'group_member' })
-  members: User[] | null;
+  @ManyToOne(() => User, (user) => user.favorites)
+  @JoinColumn({ name: 'target' })
+  target: User;
 
   @CreateDateColumn()
   createdAt!: Date;

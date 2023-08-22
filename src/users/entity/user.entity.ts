@@ -1,4 +1,5 @@
 import { Comment } from 'src/comment/entity/comment.entity';
+import { Favorites } from 'src/favorites/entity/favorites.entity';
 import { Group } from 'src/group/entity/group.entity';
 import { Task } from 'src/task/entity/task.entity';
 import { WorkspaceMember } from 'src/workspace/entity/workspace_member.entity';
@@ -51,6 +52,13 @@ export class User {
   // Comment 매핑
   @OneToMany(() => Comment, (comment) => comment.user)
   comments: Comment[];
+
+  // Favorites 매핑
+  @OneToMany(() => Favorites, (favorites) => favorites.target)
+  favorites: Favorites[]; // 내가 즐겨찾기 설정한 사람들
+
+  @OneToMany(() => Favorites, (favorites) => favorites.source)
+  favoritedBy: Favorites[]; // 나를 즐겨찾기로 설정한 사람들
 
   @CreateDateColumn()
   createdAt!: Date;

@@ -14,6 +14,7 @@ import {
 } from 'typeorm';
 import { WorkspaceInvitation } from './workspace_invitations.entity';
 import { WorkspaceMember } from './workspace_member.entity';
+import { Favorites } from 'src/favorites/entity/favorites.entity';
 
 @Entity({ name: 'Workspace' })
 export class Workspace {
@@ -30,7 +31,7 @@ export class Workspace {
   @Column({ default: 1 }) // 실제 들어온 멤버 수
   memberCount: number;
 
-  @Column({ default: 1 }) // 초대 수 (수락여부는 workspace_invitation 테이블에)
+  @Column({ default: 1 }) // 초대 수 (수락여부는 workspace_invitation)
   invitationCount: number;
 
   // workspace : user
@@ -52,10 +53,12 @@ export class Workspace {
   groups: Group[];
 
   // worksapce : task
-  // 워크스페이스에 task가 배열로 담기는 게 아니라
-  // 참여자들 배열이 있고 각 참여자에 task가 배열로 존재함.
   @OneToMany(() => Task, (task) => task.workspace)
   tasks: Task[];
+
+  // worksapce : favorites
+  @OneToMany(() => Task, (task) => task.workspace)
+  favorites: Favorites[];
 
   @CreateDateColumn()
   createdAt!: Date;

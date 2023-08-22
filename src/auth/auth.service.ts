@@ -64,14 +64,12 @@ export class AuthService {
         console.log(email, invitedEmail);
         throw new BadRequestException('로그인한 유저와 초대된 유저가 다릅니다');
       }
-
       await this.workspaceService.addUserToWorkspace(
         user,
         workspaceId,
         uniqueToken,
       );
     }
-
     // 클라이언트에 토큰 반환
     return { access_token: access_token };
   }

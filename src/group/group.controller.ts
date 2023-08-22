@@ -14,10 +14,14 @@ import { CreateGroupDto } from './dtos/create-group.dto';
 import { GroupService } from './group.service';
 import { WorkspaceGuard } from 'src/workspace.guard';
 import { UpdateGroupDto } from './dtos/update-group.dto';
+import { WorkspaceService } from 'src/workspace/workspace.service';
 
 @Controller('workspace/:workspaceId/group')
 export class GroupController {
-  constructor(private groupService: GroupService) {}
+  constructor(
+    private groupService: GroupService,
+    private workspaceService: WorkspaceService,
+  ) {}
 
   // 그룹 생성 (및 해당 유저 추가)
   @UseGuards(AuthGuard, WorkspaceGuard)
@@ -36,35 +40,52 @@ export class GroupController {
     return group;
   }
 
-  // 그룹에 초대가능 유저 조회
+  // 내가 만든 그룹 조회
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get()
+  async getMyGroups(@Req() req, @Param('workspaceId') workspaceId: number) {
+    const userId = req.userId;
+    return await this.groupService.getMyGroups(userId, workspaceId);
+  }
+
+  // 그룹에 초대가능 유저 조회
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Get('available-users')
   async getAvailableUsers(
     @Req() req,
     @Param('workspaceId') workspaceId: number,
   ) {
     const userId = req.userId;
-    const availableUsers = await this.groupService.getAvailableUsers(
+    const availableUsers = await this.workspaceService.getAvailableUsers(
       workspaceId,
     );
-    const workspaceMembers = await this.groupService.addMeToWorkspaceMembers(
-      availableUsers,
-      userId,
-    );
+    const availableUsersWithMe =
+      await this.workspaceService.addMeToWorkspaceMembers(
+        availableUsers,
+        userId,
+      );
+
+    // Add flag
+    const workspaceMembers = availableUsersWithMe.map((member, index) => {
+      if (index == 0) {
+        return { ...member, flag: true };
+      }
+      return { ...member, flag: false };
+    });
+
     return { workspaceMembers };
   }
 
   // 그룹 수정 모달창
-  // userId -> 워크스페이스멤버,그룹멤버 리스트 둘 다 자기 이름 제외하고 보여주기.
   @UseGuards(AuthGuard, WorkspaceGuard)
-  @Get(':groupId')
+  @Get(':groupId/available-users')
   async getAvailableUsersWithGroup(
     @Req() req,
     @Param('workspaceId') workspaceId: number,
     @Param('groupId') groupId: number,
   ) {
     const userId = req.userId;
-    const availableUsers = await this.groupService.getAvailableUsers(
+    const availableUsers = await this.workspaceService.getAvailableUsers(
       workspaceId,
     );
     const groupMembers = await this.groupService.getGroupMembers(
@@ -78,10 +99,11 @@ export class GroupController {
         groupMembers,
       );
 
-    const workspaceMembers = await this.groupService.addMeToWorkspaceMembers(
-      availableUsersWithFlag,
-      userId,
-    );
+    const workspaceMembers =
+      await this.workspaceService.addMeToWorkspaceMembers(
+        availableUsersWithFlag,
+        userId,
+      );
 
     return { workspaceMembers, groupMembers };
   }

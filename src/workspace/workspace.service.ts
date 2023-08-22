@@ -94,4 +94,43 @@ export class WorkspaceService {
 
     return workspaceMember;
   }
+
+  // 워크스페이스 멤버 조회
+  async getAvailableUsers(workspaceId: number) {
+    const query = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
+      .innerJoin('workspaceMember.member', 'user')
+      .select('user.id', 'userId')
+      .addSelect('user.imgUrl', 'imgUrl')
+      .addSelect('workspaceMember.nickname', 'nickname');
+
+    // console.log(query.getSql());
+    const workspaceMembers = await query.getRawMany();
+    return workspaceMembers;
+  }
+
+  // workspaceMembers에 내 정보 표시
+  async addMeToWorkspaceMembers(workspaceMembers, userId: number) {
+    // 나에 해당하는 유저 정보를 workspaceMembers에서 조회
+    const meIndex = workspaceMembers.findIndex(
+      (member) => member.userId === userId,
+    );
+    if (meIndex !== -1) {
+      const me = workspaceMembers[meIndex];
+      // nickname에 (나) 표시
+      me.nickname += ' (나)';
+
+      // 배열에서 기존 삭제
+      workspaceMembers.splice(meIndex, 1);
+      // 배열 맨 앞에 추가
+      workspaceMembers.unshift(me);
+    }
+    return workspaceMembers;
+  }
 }

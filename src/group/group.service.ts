@@ -47,14 +47,12 @@ export class GroupService {
 
     group.name = name;
     group.workspace = workspace;
-    // 해당 유저를 그룹 멤버에 추가
-    group.members = [user];
+    group.creator = user;
+    group.members = [user]; // 해당 유저를 그룹 멤버에 추가
 
     // 해당 그룹 저장
     await this.groupRepo.insert(group); // tasks만 null 상태
-
     await this.addUserToGroup(group, memberIds);
-
     return group;
   }
 
@@ -69,32 +67,21 @@ export class GroupService {
         where: { id: memberId },
       });
       group.members.push(addedUser);
+      group.memberCount += 1;
     }
-
     console.log('fr: group.members: ', group.members);
-
     await this.groupRepo.save(group);
   }
 
-  // 워크스페이스 유저 조회 (그룹 생성시 모달창)
-  async getAvailableUsers(workspaceId: number) {
-    // 워크스페이스 멤버 가져오기
-    const query = await this.workspaceMemberRepo
-      .createQueryBuilder('workspaceMember')
-      .innerJoinAndSelect(
-        'workspaceMember.workspace',
-        'workspace',
-        'workspace.id = :workspaceId',
-        { workspaceId: workspaceId },
-      )
-      .innerJoin('workspaceMember.member', 'user')
-      .select('user.id', 'userId')
-      .addSelect('user.imgUrl', 'imgUrl')
-      .addSelect('workspaceMember.nickname', 'nickname');
-
-    // console.log(query.getSql());
-    const workspaceMembers = await query.getRawMany();
-    return workspaceMembers;
+  // 내가 만든 그룹 조회
+  async getMyGroups(userId: number, workspaceId: number) {
+    const groupList = await this.groupRepo.find({
+      where: {
+        workspace: { id: workspaceId },
+        creator: { id: userId },
+      },
+    });
+    return groupList;
   }
 
   // 그룹 유저 조회 (그룹 수정시 모달창)
@@ -147,27 +134,7 @@ export class GroupService {
         flag: groupMemberIds.includes(member.userId),
       };
     });
-
     return workspaceMembersWithFlag;
-  }
-
-  // 수정 모달창 전처리: workspaceMembers에 내 정보 표시
-  async addMeToWorkspaceMembers(workspaceMembers, userId: number) {
-    // 나에 해당하는 유저 정보를 workspaceMembers에서 조회
-    const meIndex = workspaceMembers.findIndex(
-      (member) => member.userId === userId,
-    );
-    if (meIndex !== -1) {
-      const me = workspaceMembers[meIndex];
-      // nickname에 (나) 표시
-      me.nickname += ' (나)';
-
-      // 배열에서 기존 삭제
-      workspaceMembers.splice(meIndex, 1);
-      // 배열 맨 앞에 추가
-      workspaceMembers.unshift(me);
-    }
-    return workspaceMembers;
   }
 
   // 그룹 수정
@@ -203,6 +170,12 @@ export class GroupService {
         (member) => !removeMemberIds.includes(member.id),
       );
     }
+    // memberCount 업데이트
+    const addCount = addMemberIds?.length ?? 0;
+    const removeCount = removeMemberIds?.length ?? 0;
+    const memberCountChange = addCount - removeCount;
+    group.memberCount += memberCountChange;
+
     // DB 저장
     return await this.groupRepo.save(group);
   }
