@@ -5,5 +5,5 @@ export class LoginDto {
   credential: string;
 
   @IsOptional()
-  uniqueToken: string;
+  uniqueToken?: string;
 }
