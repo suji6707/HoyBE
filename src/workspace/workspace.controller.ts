@@ -1,4 +1,12 @@
-import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
 import { AuthGuard } from 'src/auth.guard';
 import { CreateWorkspaceDto } from './dtos/create-workspace.dto';
@@ -25,6 +33,14 @@ export class WorkspaceController {
       userId,
       createWorkspaceDto,
     );
+  }
+
+  // 내 워크스페이스 조회
+  @UseGuards(AuthGuard)
+  @Get()
+  async findMyWorkspaces(@Req() req) {
+    const userId = req.userId;
+    return await this.workspaceService.findMyWorkspaces(userId);
   }
 
   // 이메일로 워크스페이스 초대

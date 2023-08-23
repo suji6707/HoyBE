@@ -131,7 +131,16 @@ export class WorkspaceService {
   }
 
   // 내가 멤버로 속해있는 워크스페이스 조회
-  // async
+  async findMyWorkspaces(userId: number) {
+    const workspaces = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .innerJoin('workspaceMember.workspace', 'workspace')
+      .select(['workspace.id', 'workspace.name', 'workspace.imgUrl'])
+      .where('workspaceMember.member.id = :userId', { userId: userId })
+      .getRawMany();
+
+    return workspaces;
+  }
 
   // 워크스페이스 멤버 조회
   async getAvailableUsers(workspaceId: number) {
