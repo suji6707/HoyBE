@@ -56,7 +56,7 @@ export class CommentService {
   }
 
   // 코멘트 조회
-  async viewComment(userId: number, taskId: number) {
+  async viewComment(userId: number, workspaceId: number, taskId: number) {
     const comments = await this.commentRepo
       .createQueryBuilder('comment')
       .select([
@@ -64,19 +64,26 @@ export class CommentService {
         'comment.updatedAt',
         'comment.text',
         'user.id',
-        'user.name',
         'user.imgUrl',
+        'workspaceMember.nickname',
       ])
       .innerJoin('comment.user', 'user')
+      .innerJoin(
+        'workspace_member',
+        'workspaceMember',
+        'workspaceMember.userId = user.id AND workspaceMember.workspaceId = :workspaceId',
+        { workspaceId: workspaceId },
+      )
       .where('comment.taskId = :taskId', { taskId: taskId })
       .orderBy('comment.createdAt', 'DESC')
-      .getMany();
+      .getRawMany();
 
     // 각 댓글에 대해 isOwner 프로퍼티 추가
     const commentsWithOwnership = comments.map((comment) => {
+      console.log(comment);
       return {
         ...comment,
-        isOwner: comment.user.id === userId,
+        isOwner: comment.user_id === userId,
       };
     });
 

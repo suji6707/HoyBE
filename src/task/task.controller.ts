@@ -76,10 +76,18 @@ export class TaskController {
   // task 상세 조회 (with Comments)
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get(':taskId')
-  async getTaskDetail(@Param('taskId') taskId: number, @Req() req) {
+  async getTaskDetail(
+    @Param('workspaceId') workspaceId: number,
+    @Param('taskId') taskId: number,
+    @Req() req,
+  ) {
     const userId = req.userId;
     const { user, task } = await this.taskService.getTaskDetail(userId, taskId);
-    const comments = await this.commentService.viewComment(userId, taskId);
+    const comments = await this.commentService.viewComment(
+      userId,
+      workspaceId,
+      taskId,
+    );
     return { user, task, comments };
   }
 
