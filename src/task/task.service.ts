@@ -7,6 +7,7 @@ import { CreateTaskDto } from './dtos/create-task.dto';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import { User } from 'src/users/entity/user.entity';
 import { UpdateTaskDto } from './dtos/update-task.dto';
+import { WorkspaceMember } from 'src/workspace/entity/workspace_member.entity';
 
 @Injectable()
 export class TaskService {
@@ -14,6 +15,8 @@ export class TaskService {
     @InjectRepository(Task) private taskRepo: Repository<Task>,
     @InjectRepository(Workspace) private workspaceRepo: Repository<Workspace>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(WorkspaceMember)
+    private workspaceMemberRepo: Repository<WorkspaceMember>,
   ) {}
 
   // Task 생성
@@ -89,7 +92,15 @@ export class TaskService {
 
   // Task 상세 조회
   async getTaskDetail(userId: number, taskId: number) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .innerJoin('workspaceMember.member', 'user')
+      .select('user.id', 'userId')
+      .addSelect('user.imgUrl', 'imgUrl')
+      .where('user.id = :userId', { userId: userId })
+      .addSelect('workspaceMember.nickname', 'nickname')
+      .getRawOne();
+
     const task = await this.taskRepo.findOne({ where: { id: taskId } });
     return { user, task };
   }
