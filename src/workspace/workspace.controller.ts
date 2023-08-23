@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -41,6 +42,25 @@ export class WorkspaceController {
   async findMyWorkspaces(@Req() req) {
     const userId = req.userId;
     return await this.workspaceService.findMyWorkspaces(userId);
+  }
+
+  // 해당 워크스페이스에서 내 정보 (sidebar)
+  @UseGuards(AuthGuard)
+  @Get(':workspaceId/current-user')
+  async getMyInfo(@Req() req, @Param('workspaceId') workspaceId: number) {
+    const userId = req.userId;
+    console.log('fr: ', userId);
+    return await this.workspaceService.getMyInfo(userId, workspaceId);
+  }
+
+  // 초대가능 이메일인지 확인
+  @UseGuards(AuthGuard)
+  @Get(':workspaceId/invitations/availability')
+  async isEmailInvitable(
+    @Param('workspaceId') workspaceId: number,
+    @Query('email') email: string,
+  ) {
+    return this.emailService.isEmailInvitable(workspaceId, email);
   }
 
   // 이메일로 워크스페이스 초대

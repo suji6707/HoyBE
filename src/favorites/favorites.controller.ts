@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
 
 @Controller('workspace/:workspaceId/favorites')
@@ -11,5 +11,13 @@ export class FavoritesController {
     @Query('query') query: string,
   ) {
     return this.favoritesService.searchMembers(workspaceId, query);
+  }
+
+  @Post('add-user/:userId')
+  async addFavorites(
+    @Param('workspaceId') workspaceId: number,
+    @Param('userId') userId: number,
+  ) {
+    return await this.favoritesService.addFavorites(workspaceId, userId);
   }
 }

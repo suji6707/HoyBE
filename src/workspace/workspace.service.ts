@@ -130,6 +130,29 @@ export class WorkspaceService {
     return workspaceMember;
   }
 
+  // 해당 워크스페이스에서 내 정보
+  async getMyInfo(userId: number, workspaceId: number) {
+    console.log('fr: ', userId);
+    const user = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
+      .innerJoinAndSelect('workspaceMember.member', 'user', 'user.id = :id', {
+        id: userId,
+      })
+      .select('user.id', 'userId')
+      .addSelect('user.imgUrl', 'imgUrl')
+      .addSelect('workspaceMember.nickname', 'nickname')
+      .getRawOne();
+
+    console.log('fr: ', user);
+    return user;
+  }
+
   // 내가 멤버로 속해있는 워크스페이스 조회
   async findMyWorkspaces(userId: number) {
     const workspaces = await this.workspaceMemberRepo
