@@ -88,9 +88,10 @@ export class TaskService {
   }
 
   // Task 상세 조회
-  async getTaskDetail(taskId: number) {
+  async getTaskDetail(userId: number, taskId: number) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
     const task = await this.taskRepo.findOne({ where: { id: taskId } });
-    return task;
+    return { user, task };
   }
 
   // Task 수정 - 완료 여부 표시

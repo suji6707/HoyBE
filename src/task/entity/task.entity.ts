@@ -50,12 +50,12 @@ export class Task {
   @Column({ type: 'date', nullable: true })
   dueDate?: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ select: false })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ select: false })
   updatedAt!: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ select: false })
   deletedAt!: Date;
 }

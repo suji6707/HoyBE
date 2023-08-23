@@ -78,9 +78,9 @@ export class TaskController {
   @Get(':taskId')
   async getTaskDetail(@Param('taskId') taskId: number, @Req() req) {
     const userId = req.userId;
-    const task = await this.taskService.getTaskDetail(taskId);
+    const { user, task } = await this.taskService.getTaskDetail(userId, taskId);
     const comments = await this.commentService.viewComment(userId, taskId);
-    return { task, comments };
+    return { user, task, comments };
   }
 
   // task 수정 - todo 완료 표시

@@ -34,7 +34,7 @@ export class User {
   @Column({ length: 127, nullable: true })
   phone?: string;
 
-  @Column({ length: 511, nullable: true }) // 소셜로그인
+  @Column({ length: 511, nullable: true, select: false }) // 소셜로그인
   token?: string;
 
   // Workspace 매핑
@@ -60,12 +60,12 @@ export class User {
   @OneToMany(() => Favorites, (favorites) => favorites.source)
   favoritedBy: Favorites[]; // 나를 즐겨찾기로 설정한 사람들
 
-  @CreateDateColumn()
+  @CreateDateColumn({ select: false })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ select: false })
   updatedAt!: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ select: false })
   deletedAt!: Date;
 }

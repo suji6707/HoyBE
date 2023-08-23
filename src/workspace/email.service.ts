@@ -22,7 +22,9 @@ export class EmailService {
   public async sendEmail(workspaceId: number, email: string): Promise<void> {
     // 토큰/Unique ID
     const payload = { workspaceId: workspaceId, email: email };
-    const uniqueToken = await this.jwtService.signAsync(payload);
+    const uniqueToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '1h',
+    });
 
     // 해당 워크스페이스 초대 횟수 체크
     const workspace = await this.workspaceRepo.findOne({

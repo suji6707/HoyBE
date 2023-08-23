@@ -21,12 +21,12 @@ export class AuthController {
     @Res() res: Response,
   ) {
     // 구글 credential 정보
-    const { credential, uniqueToken } = loginDto;
+    const { credential } = loginDto;
 
     // login에서 JWT 토큰 반환
-    const jwtToken = await this.authService.login(credential, uniqueToken);
+    const { access_token, email } = await this.authService.login(credential);
     res.redirect(
-      `${process.env.DOMAIN}/login?access_token=${jwtToken.access_token}`, // 배포 버전에선 vercel 주소로
+      `${process.env.DOMAIN}/login?access_token=${access_token}&email=${email}`, // 배포 버전에선 vercel 주소로
     );
   }
 

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entity/user.entity';
@@ -16,7 +16,7 @@ export class AuthService {
     private workspaceService: WorkspaceService,
   ) {}
 
-  async login(credential: string, uniqueToken?: string) {
+  async login(credential: string) {
     // googleId, email, name, imgUrl 변수에 담는다
     const result = await this.getDecodedJwtGoogle(credential);
     const googlePayload = (result as LoginTicket).getPayload();
@@ -30,48 +30,29 @@ export class AuthService {
       where: { googleId: googleId },
     });
 
-    let user;
+    let userId;
     // googleId가 존재하지 않을 때: Create user in our database
     if (!storedUser) {
-      user = new User();
+      const user = new User();
       user.googleId = googleId;
       user.email = email;
       user.name = name;
       user.imgUrl = imgUrl;
-      await this.userRepo.save(user);
+      const savedUser = await this.userRepo.save(user);
+      userId = savedUser.id;
     } else {
       // 존재할 때: access_token만 저장
-      user = storedUser;
+      userId = storedUser.id;
     }
     // JWT 토큰 생성
-    const payload = { sub: storedUser.id };
+    const payload = { sub: userId };
     const access_token = await this.jwtService.signAsync(payload);
 
-    // user 객체에 token 저장
-    user.token = access_token;
-    await this.userRepo.save(user);
+    // user 객체에 token값 업데이트
+    await this.userRepo.update(userId, { token: access_token });
 
-    let workspaceId: number;
-    let invitedEmail: string;
-
-    if (uniqueToken) {
-      const decoded = await this.jwtService.verifyAsync(uniqueToken);
-      workspaceId = decoded.workspaceId;
-      invitedEmail = decoded.email;
-
-      // 유저 인증: 실제 로그인 유저(credential. email)과 초대된 유저(login()파라미터)가 같은지 확인
-      if (email !== invitedEmail) {
-        console.log(email, invitedEmail);
-        throw new BadRequestException('로그인한 유저와 초대된 유저가 다릅니다');
-      }
-      await this.workspaceService.addUserToWorkspace(
-        user,
-        workspaceId,
-        uniqueToken,
-      );
-    }
     // 클라이언트에 토큰 반환
-    return { access_token: access_token };
+    return { access_token: access_token, email: email };
   }
 
   async getDecodedJwtGoogle(token: string) {

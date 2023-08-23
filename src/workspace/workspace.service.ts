@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,6 +13,7 @@ import { User } from 'src/users/entity/user.entity';
 import { WorkspaceMember } from './entity/workspace_member.entity';
 import { WorkspaceInvitation } from './entity/workspace_invitations.entity';
 import { InvitationStatus } from './entity/workspace_invitations.entity';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class WorkspaceService {
@@ -21,6 +24,7 @@ export class WorkspaceService {
     @InjectRepository(WorkspaceInvitation)
     private invitationRepo: Repository<WorkspaceInvitation>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    private jwtService: JwtService,
   ) {}
 
   async createWorkspace(
@@ -62,10 +66,34 @@ export class WorkspaceService {
   }
 
   // 이메일 초대를 통한 추가
+  async acceptInvitaion(uniqueToken: string, email: string, userId: number) {
+    let decoded;
+    try {
+      decoded = await this.jwtService.verifyAsync(uniqueToken);
+    } catch (err) {
+      console.log(err.message);
+      if (err.message === 'jwt expired') {
+        throw new UnauthorizedException('토큰이 만료되었습니다');
+      } else {
+        throw err;
+      }
+    }
+
+    const workspaceId = decoded.workspaceId;
+    const invitedEmail = decoded.email;
+
+    // 유저 인증: 실제 로그인 유저(credential. email)과 초대된 유저(login()파라미터)가 같은지 확인
+    if (email !== invitedEmail) {
+      console.log(email, invitedEmail);
+      throw new BadRequestException('로그인한 유저와 초대된 유저가 다릅니다');
+    }
+    await this.addUserToWorkspace(userId, workspaceId, uniqueToken);
+  }
+
   async addUserToWorkspace(
-    user: User,
+    userId: number,
     workspaceId: number,
-    uniqueToken?: string,
+    uniqueToken: string,
   ) {
     // workspace 조회 및 예외처리
     const workspace = await this.workspaceRepo.findOne({
@@ -74,6 +102,7 @@ export class WorkspaceService {
     if (!workspace) {
       throw new NotFoundException('해당 워크스페이스를 찾을 수 없습니다');
     }
+    const user = await this.userRepo.findOne({ where: { id: userId } });
 
     // WorkspaceMember 객체 생성
     const workspaceMember = new WorkspaceMember();

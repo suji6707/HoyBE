@@ -24,6 +24,9 @@ export class Workspace {
   @Column({ length: 127 }) // 워크스페이스 이름
   name: string;
 
+  @Column({ length: 511, nullable: true })
+  imgUrl?: string;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'host' }) // 방장 userId
   host: User;
@@ -60,12 +63,12 @@ export class Workspace {
   @OneToMany(() => Task, (task) => task.workspace)
   favorites: Favorites[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ select: false })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ select: false })
   updatedAt!: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ select: false })
   deletedAt!: Date;
 }
