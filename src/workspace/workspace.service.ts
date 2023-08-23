@@ -117,8 +117,14 @@ export class WorkspaceService {
     });
 
     // workspaceInvitation 업데이트
-    await this.invitationRepo.update(uniqueToken, {
-      status: () => InvitationStatus.ACCEPTED,
+    const invitation = await this.invitationRepo.findOne({
+      where: { uniqueToken: uniqueToken },
+    });
+    if (!invitation) {
+      throw new NotFoundException('해당 초대를 찾을 수 없습니다');
+    }
+    await this.invitationRepo.update(invitation.id, {
+      status: InvitationStatus.ACCEPTED,
     });
 
     return workspaceMember;

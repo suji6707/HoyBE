@@ -2,6 +2,6 @@ import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class SendEmailDto {
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  @IsEmail({}, { each: true })
+  emails: string[];
 }

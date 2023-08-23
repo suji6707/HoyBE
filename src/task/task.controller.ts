@@ -84,7 +84,7 @@ export class TaskController {
     const userId = req.userId;
     const { user, task } = await this.taskService.getTaskDetail(userId, taskId);
     const comments = await this.commentService.viewComment(
-      userId,
+      userId, // task 작성자
       workspaceId,
       taskId,
     );

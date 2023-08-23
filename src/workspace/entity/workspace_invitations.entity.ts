@@ -3,13 +3,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Workspace } from './workspace.entity';
-import { User } from 'src/users/entity/user.entity';
 
 export enum InvitationStatus {
   PENDING = 'pending',
@@ -17,8 +17,12 @@ export enum InvitationStatus {
 }
 
 @Entity({ name: 'workspace_invitation' })
+@Index('IDX_UNIQUE_TOKEN', ['uniqueToken'])
 export class WorkspaceInvitation {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
   uniqueToken: string;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.workspaceInvitations, {

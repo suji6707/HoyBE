@@ -34,7 +34,7 @@ export class WorkspaceController {
     @Param('workspaceId') workspaceId: number,
     @Body() sendEmailDto: SendEmailDto,
   ) {
-    return await this.emailService.sendEmail(workspaceId, sendEmailDto.email);
+    return await this.emailService.sendEmail(workspaceId, sendEmailDto.emails);
   }
 
   @UseGuards(AuthGuard)

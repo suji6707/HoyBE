@@ -1,4 +1,4 @@
-import { Injectable, Param } from '@nestjs/common';
+import { Injectable, NotFoundException, Param } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,59 +19,59 @@ export class EmailService {
     private jwtService: JwtService,
   ) {}
 
-  public async sendEmail(workspaceId: number, email: string): Promise<void> {
-    // 토큰/Unique ID
-    const payload = { workspaceId: workspaceId, email: email };
-    const uniqueToken = await this.jwtService.signAsync(payload, {
-      expiresIn: '1h',
-    });
-
+  public async sendEmail(workspaceId: number, emails: string[]): Promise<void> {
     // 해당 워크스페이스 초대 횟수 체크
     const workspace = await this.workspaceRepo.findOne({
       where: { id: workspaceId },
     });
-
-    if (workspace.invitationCount >= 20) {
+    if (!workspace) {
+      throw new NotFoundException('존재하지 않는 워크스페이스입니다');
+    }
+    if (workspace.invitationCount > 20) {
       throw new Error(
         '초대 가능 인원을 초과하였습니다. Hoy 팀과 미팅 일정을 잡으셔서 더 많은 유저를 초대해보세요!',
       );
     }
+    for (const email of emails) {
+      // 토큰/Unique ID
+      const payload = { workspaceId: workspaceId, email: email };
+      const uniqueToken = await this.jwtService.signAsync(payload, {
+        expiresIn: '1h',
+      });
+      // 초대 내역 저장
+      const workspaceInvitation = new WorkspaceInvitation();
+      workspaceInvitation.workspace = workspace;
+      workspaceInvitation.email = email;
+      workspaceInvitation.uniqueToken = uniqueToken;
+      await this.invitationRepo.insert(workspaceInvitation);
 
-    // 초대 내역 저장
-    const workspaceInvitation = new WorkspaceInvitation();
-    workspaceInvitation.workspace = workspace;
-    workspaceInvitation.email = email; // 비회원이면 User 객체가 없기 때문에 email만 저장하는 걸로 통일
-    workspaceInvitation.uniqueToken = uniqueToken;
-    await this.invitationRepo.insert(workspaceInvitation);
+      // 링크 생성. 아래 도메인 GET 요청으로
+      // 1. hoy.im 사이트 이동 및 구글 로그인
+      // 2. accept 절차 진행
 
+      // 클라이언트 - login/:uniqueToken 이 로컬스토리지에 저장돼있으면
+      const invitationLink = `${process.env.DOMAIN}/login?uniqueToken=${uniqueToken}`;
+      console.log('fr: 이메일 초대링크: ', invitationLink);
+
+      this.mailerService
+        .sendMail({
+          to: email,
+          from: 'noreply@nestjs.com',
+          subject: 'Hoy 워크스페이스로 초대합니다', // 이메일 제목
+          text: `Please join our workspace by clicking the link: ${invitationLink}`,
+          html: `<p>Please <a href="${invitationLink}">click here</a> to join our workspace.</p>`, // HTML body content
+        })
+        .then((success) => {
+          console.log(success);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
     // 워크스페이스 invitationCount
     await this.workspaceRepo.update(workspaceId, {
-      invitationCount: () => 'invitationCount + 1',
+      invitationCount: () => `invitationCount + ${emails.length}`,
     });
-
-    // 링크 생성. 아래 도메인 GET 요청으로
-    // 1. hoy.im 사이트 이동 및 구글 로그인
-    // 2. accept 절차 진행
-
-    // 클라이언트 - login/:uniqueToken 이 파라미터로 붙어있으면
-    // const invitationLink = `${process.env.SERVER_DOMAIN}/auth/google/callback/${uniqueToken}`;
-    const invitationLink = `${process.env.DOMAIN}/login?uniqueToken=${uniqueToken}`;
-    console.log('fr: 이메일 초대링크: ', invitationLink);
-
-    this.mailerService
-      .sendMail({
-        to: email,
-        from: 'noreply@nestjs.com',
-        subject: 'Hoy 워크스페이스로 초대합니다', // 이메일 제목
-        text: `Please join our workspace by clicking the link: ${invitationLink}`,
-        html: `<p>Please <a href="${invitationLink}">click here</a> to join our workspace.</p>`, // HTML body content
-      })
-      .then((success) => {
-        console.log(success);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
   }
 }
 
