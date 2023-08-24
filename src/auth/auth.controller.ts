@@ -9,6 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from './dtos/login.dto';
 import { Response } from 'express';
+import 'dotenv/config';
 
 @Controller('auth')
 export class AuthController {
@@ -25,32 +26,9 @@ export class AuthController {
 
     // login에서 JWT 토큰 반환
     const { access_token, email } = await this.authService.login(credential);
+    console.log(`${process.env.DOMAIN}`);
     res.redirect(
       `${process.env.DOMAIN}/login?access_token=${access_token}&email=${email}`, // 배포 버전에선 vercel 주소로
     );
   }
-
-  // @HttpCode(HttpStatus.OK)
-  // @Post('google/callback/:uniqueToken')
-  // async receiveGoogleCallbackWithToken(
-  //   @Body() loginDto: LoginDto,
-  //   @Res() res: Response,
-  //   @Param('uniqueToken') uniqueToken?: string,
-  // ) {
-  //   // 구글 credential 정보
-  //   const { credential } = loginDto;
-
-  //   // login에서 JWT 토큰 반환
-  //   const jwtToken = await this.authService.login(credential, uniqueToken);
-  //   // return res.json(jwtToken);
-  //   // 쿠키 설정
-  //   // res.cookie('ACCESS_KEY', jwtToken.access_token, {
-  //   //   httpOnly: true,
-  //   //   maxAge: 1000 * 60 * 60 * 24 * 7,
-  //   //   domain: 'localhost',
-  //   // });
-  //   res.redirect(
-  //     `http://localhost:3000/login?access_token=${jwtToken.access_token}`,
-  //   );
-  // }
 }

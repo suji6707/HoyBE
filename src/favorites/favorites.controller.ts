@@ -1,5 +1,14 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
+import { AuthGuard } from 'src/auth.guard';
 
 @Controller('workspace/:workspaceId/favorites')
 export class FavoritesController {
@@ -13,11 +22,12 @@ export class FavoritesController {
     return this.favoritesService.searchMembers(workspaceId, query);
   }
 
-  @Post('add-user/:userId')
+  @UseGuards(AuthGuard)
+  @Post('toggle-user/:userId')
   async addFavorites(
     @Param('workspaceId') workspaceId: number,
     @Param('userId') userId: number,
   ) {
-    return await this.favoritesService.addFavorites(workspaceId, userId);
+    return await this.favoritesService.toggleFavorites(workspaceId, userId);
   }
 }

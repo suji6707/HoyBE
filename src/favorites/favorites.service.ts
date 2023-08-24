@@ -13,7 +13,25 @@ export class FavoritesService {
   ) {}
 
   // 즐겨찾기 추가
-  async addFavorites(workspaceId: number, userId: number) {}
+  async toggleFavorites(workspaceId: number, userId: number) {}
+
+  // async toggleFavorites(workspaceId: number, userId: number) {
+  //   const favorite = await this.findOne({
+  //     where: {
+  //       workspace: { id: workspaceId },
+  //       target: { id: userId }
+  //     }
+  //   });
+
+  //   if (favorite) {
+  //     await this.remove(favorite);
+  //   } else {
+  //     const newFavorite = new Favorites();
+  //     newFavorite.workspace = { id: workspaceId } as any;  // you might want to fetch the actual workspace entity for a more thorough implementation
+  //     newFavorite.target = { id: userId } as any;  // same for the user
+  //     await this.save(newFavorite);
+  //   }
+  // }
 
   // 닉네임 검색
   async searchMembers(workspaceId: number, query: string) {
