@@ -13,7 +13,7 @@ async function bootstrap() {
 
   if (process.env.CORS == 'true') {
     app.enableCors({
-      allowedHeaders: 'content-type',
+      allowedHeaders: ['content-type', 'authorization'],
       origin: process.env.CORS_ORIGIN || '*',
       credentials: true,
     });

@@ -81,6 +81,7 @@ export class WorkspaceController {
   ) {
     const userId = req.userId;
     const { uniqueToken, email } = acceptInvitationDto;
+    console.log('fr:  uniqueToken, email', uniqueToken, email);
     return await this.workspaceService.acceptInvitaion(
       uniqueToken,
       email,

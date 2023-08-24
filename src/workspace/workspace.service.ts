@@ -87,7 +87,7 @@ export class WorkspaceService {
       console.log(email, invitedEmail);
       throw new BadRequestException('로그인한 유저와 초대된 유저가 다릅니다');
     }
-    await this.addUserToWorkspace(userId, workspaceId, uniqueToken);
+    return await this.addUserToWorkspace(userId, workspaceId, uniqueToken);
   }
 
   async addUserToWorkspace(
@@ -104,12 +104,16 @@ export class WorkspaceService {
     }
     const user = await this.userRepo.findOne({ where: { id: userId } });
 
-    // WorkspaceMember 객체 생성
     const workspaceMember = new WorkspaceMember();
     workspaceMember.workspace = workspace;
     workspaceMember.member = user;
     workspaceMember.nickname = user.name; // 구글 로그인 이름 넣기
-    await this.workspaceMemberRepo.insert(workspaceMember);
+    // WorkspaceMember 객체 생성
+    try {
+      await this.workspaceMemberRepo.insert(workspaceMember);
+    } catch (err) {
+      throw new ConflictException('이미 워크스페이스에 초대되었습니다');
+    }
 
     // Workspace 업데이트
     await this.workspaceRepo.update(workspaceId, {
