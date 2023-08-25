@@ -32,7 +32,11 @@ export class GroupService {
     const { name, memberIds } = createGroupDto;
     // 이미 존재하는 그룹인지 확인(해당 워크스페이스내)
     const existingGroup = await this.groupRepo.findOne({
-      where: { name: name },
+      where: {
+        name: name,
+        creator: { id: userId },
+        workspace: { id: workspaceId },
+      },
     });
     if (existingGroup) {
       throw new ConflictException('그룹 이름이 이미 존재합니다.');
