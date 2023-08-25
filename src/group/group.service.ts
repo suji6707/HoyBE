@@ -92,6 +92,9 @@ export class GroupService {
     const groupMemberIds = await this.getGroupMemberIds(groupId);
     console.log(`fr: 그룹 ${groupId}에 해당하는 유저들`, groupMemberIds);
 
+    if (groupMemberIds.length === 0) {
+      return [];
+    }
     const groupMembersWithNicknames = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
       .innerJoinAndSelect(
