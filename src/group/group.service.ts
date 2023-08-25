@@ -52,7 +52,10 @@ export class GroupService {
 
     // 해당 그룹 저장
     await this.groupRepo.insert(group); // tasks만 null 상태
-    await this.addUserToGroup(group, memberIds);
+    // memberIds가 있을 때만 해당 유저 추가
+    if (memberIds) {
+      await this.addUserToGroup(group, memberIds);
+    }
     return group;
   }
 
@@ -87,6 +90,7 @@ export class GroupService {
   // 그룹 유저 조회 (그룹 수정시 모달창)
   async getGroupMembers(groupId: number, workspaceId: number) {
     const groupMemberIds = await this.getGroupMemberIds(groupId);
+    console.log(`fr: 그룹 ${groupId}에 해당하는 유저들`, groupMemberIds);
 
     const groupMembersWithNicknames = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')

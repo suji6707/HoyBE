@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -106,6 +107,20 @@ export class GroupController {
       );
 
     return { workspaceMembers, groupMembers };
+  }
+
+  // 워크스페이스 멤버 검색 (그룹 생성/수정시 검색 기능은 동일. flag는 프론트에서 관리해야 해서)
+  @UseGuards(AuthGuard)
+  @Get('search')
+  async searchMembers(
+    @Param('workspaceId') workspaceId: number,
+    @Query('query') query: string,
+  ) {
+    const queryResult = await this.workspaceService.searchMembers(
+      workspaceId,
+      query,
+    );
+    return queryResult;
   }
 
   // 그룹 수정(그룹명 및 유저 추가/삭제)

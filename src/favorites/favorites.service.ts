@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Favorites } from './entity/favorites.entity';
 import { Repository } from 'typeorm';
 import { WorkspaceMember } from 'src/workspace/entity/workspace_member.entity';
+import { Workspace } from 'src/workspace/entity/workspace.entity';
+import { User } from 'src/users/entity/user.entity';
 
 @Injectable()
 export class FavoritesService {
@@ -12,59 +14,52 @@ export class FavoritesService {
     private workspaceMemberRepo: Repository<WorkspaceMember>,
   ) {}
 
-  // 즐겨찾기 추가
-  async toggleFavorites(workspaceId: number, userId: number) {}
+  // 즐겨찾기 추가/삭제 토글
+  async toggleFavorites(
+    workspaceId: number,
+    sourceId: number,
+    targetId: number,
+  ) {
+    const favorite = await this.favoritesRepo.findOne({
+      where: {
+        workspace: { id: workspaceId },
+        source: { id: sourceId },
+        target: { id: targetId },
+      },
+    });
 
-  // async toggleFavorites(workspaceId: number, userId: number) {
-  //   const favorite = await this.findOne({
-  //     where: {
-  //       workspace: { id: workspaceId },
-  //       target: { id: userId }
-  //     }
-  //   });
+    if (favorite) {
+      // 존재하면 삭제
+      await this.favoritesRepo.remove(favorite);
+      return { actionTaken: 'removed' };
+    }
 
-  //   if (favorite) {
-  //     await this.remove(favorite);
-  //   } else {
-  //     const newFavorite = new Favorites();
-  //     newFavorite.workspace = { id: workspaceId } as any;  // you might want to fetch the actual workspace entity for a more thorough implementation
-  //     newFavorite.target = { id: userId } as any;  // same for the user
-  //     await this.save(newFavorite);
-  //   }
-  // }
+    const newFavorite = new Favorites();
+    newFavorite.workspace = { id: workspaceId } as Workspace;
+    newFavorite.source = { id: sourceId } as User;
+    newFavorite.target = { id: targetId } as User;
 
-  // 닉네임 검색
-  async searchMembers(workspaceId: number, query: string) {
-    const availableUsers = await this.workspaceMemberRepo
-      .createQueryBuilder('workspaceMember')
-      .innerJoinAndSelect(
-        'workspaceMember.workspace',
-        'workspace',
-        'workspace.id = :workspaceId',
-        { workspaceId: workspaceId },
-      )
-      .innerJoin('workspaceMember.member', 'user')
-      .select(['user.id', 'user.imgUrl'])
-      .addSelect('workspaceMember.nickname', 'nickname')
-      .where('workspaceMember.nickname LIKE :query', { query: `%${query}%` })
+    await this.favoritesRepo.insert(newFavorite);
+
+    console.log('fr: 즐겨찾기', newFavorite);
+    return { actionTaken: 'added' };
+  }
+
+  // favorites target인 유저 조회
+  async getFavoriteMemberIds(userId: number, workspaceId: number) {
+    const favorites = await this.favoritesRepo
+      .createQueryBuilder('favorites')
+      .select('favorites.target.id')
+      .where('favorites.source.id = :id', { id: userId })
+      .andWhere('favorites.workspace.id = :workspaceId', {
+        workspaceId: workspaceId,
+      })
       .getRawMany();
 
-    return availableUsers;
-    // 검색결과는 query like인 유저들의(nickname, userId, imgUrl, favorites 여부)가 같이 와야함.
-    // 2. Favorites-source=userId인 target 배열 중 userId가 있으면
+    const favoriteMemberIds = favorites.map(
+      (favorite) => favorite.favorites_target,
+    );
+
+    return favoriteMemberIds;
   }
 }
-
-// const availableUsers = await this.workspaceMemberRepo
-// .createQueryBuilder('workspaceMember')
-// .innerJoinAndSelect(
-//   'workspaceMember.workspace',
-//   'workspace',
-//   'workspace.id = :workspaceId',
-//   { workspaceId: workspaceId },
-// )
-// .innerJoin('workspaceMember.member', 'user')
-// .where('workspaceMember.nickname LIKE :query', { query: `%${query}%` })
-// .select(['user.id', 'user.imgUrl'])
-// .addSelect('workspaceMember.nickname', 'nickname')
-// .getMany();

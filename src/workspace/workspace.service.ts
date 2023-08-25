@@ -207,4 +207,23 @@ export class WorkspaceService {
     }
     return workspaceMembers;
   }
+
+  // 닉네임 검색
+  async searchMembers(workspaceId: number, query: string) {
+    const availableUsers = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
+      .innerJoin('workspaceMember.member', 'user')
+      .select(['user.id', 'user.imgUrl'])
+      .addSelect('workspaceMember.nickname', 'nickname')
+      .where('workspaceMember.nickname LIKE :query', { query: `%${query}%` })
+      .getRawMany();
+
+    return availableUsers;
+  }
 }
