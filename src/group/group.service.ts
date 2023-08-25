@@ -48,10 +48,11 @@ export class GroupService {
     group.name = name;
     group.workspace = workspace;
     group.creator = user;
-    group.members = [user]; // 해당 유저를 그룹 멤버에 추가
+    group.members = [];
 
     // 해당 그룹 저장
     await this.groupRepo.save(group); // tasks만 null 상태
+
     // memberIds가 있을 때만 해당 유저 추가
     if (memberIds) {
       await this.addUserToGroup(group, memberIds);
@@ -72,7 +73,6 @@ export class GroupService {
       group.members.push(addedUser);
       group.memberCount += 1;
     }
-    console.log('fr: group.members: ', group.members);
     await this.groupRepo.save(group);
   }
 
@@ -90,7 +90,6 @@ export class GroupService {
   // 그룹 유저 조회 (그룹 수정시 모달창)
   async getGroupMembers(groupId: number, workspaceId: number) {
     const groupMemberIds = await this.getGroupMemberIds(groupId);
-    console.log(`fr: 그룹 ${groupId}에 해당하는 유저들`, groupMemberIds);
 
     if (groupMemberIds.length === 0) {
       return [];
@@ -112,7 +111,6 @@ export class GroupService {
       .addSelect('workspaceMember.nickname', 'nickname')
       .getRawMany();
 
-    console.log('fr: ', groupMembersWithNicknames);
     return groupMembersWithNicknames;
   }
 
@@ -134,6 +132,7 @@ export class GroupService {
   async addFlagToWorkspaceMembers(availableUsers, groupMembers) {
     // groupMembers의 userId 목록 생성
     const groupMemberIds = groupMembers.map((member) => member.userId);
+
     // workspaceMembers에 flag 추가
     const workspaceMembersWithFlag = availableUsers.map((member) => {
       return {

@@ -49,7 +49,7 @@ export class GroupController {
     return await this.groupService.getMyGroups(userId, workspaceId);
   }
 
-  // 그룹에 초대가능 유저 조회
+  // 그룹 생성 모달창: 초대가능 유저 조회
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get('available-users')
   async getAvailableUsers(
@@ -60,6 +60,7 @@ export class GroupController {
     const availableUsers = await this.workspaceService.getAvailableUsers(
       workspaceId,
     );
+
     const availableUsersWithMe =
       await this.workspaceService.addMeToWorkspaceMembers(
         availableUsers,
@@ -67,10 +68,7 @@ export class GroupController {
       );
 
     // Add flag
-    const workspaceMembers = availableUsersWithMe.map((member, index) => {
-      if (index == 0) {
-        return { ...member, flag: true };
-      }
+    const workspaceMembers = availableUsersWithMe.map((member) => {
       return { ...member, flag: false };
     });
 

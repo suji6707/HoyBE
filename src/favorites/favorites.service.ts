@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Favorites } from './entity/favorites.entity';
 import { Repository } from 'typeorm';
-import { WorkspaceMember } from 'src/workspace/entity/workspace_member.entity';
 import { Workspace } from 'src/workspace/entity/workspace.entity';
 import { User } from 'src/users/entity/user.entity';
 
@@ -10,9 +9,28 @@ import { User } from 'src/users/entity/user.entity';
 export class FavoritesService {
   constructor(
     @InjectRepository(Favorites) private favoritesRepo: Repository<Favorites>,
-    @InjectRepository(WorkspaceMember)
-    private workspaceMemberRepo: Repository<WorkspaceMember>,
   ) {}
+
+  // 사이드바 즐겨찾기 멤버 조회
+  async getFavorites(userId: number, workspaceId: number) {
+    const favorites = await this.favoritesRepo
+      .createQueryBuilder('favorites')
+      .innerJoin('favorites.target', 'user')
+      .innerJoin(
+        'workspace_member',
+        'workspaceMember',
+        'workspaceMember.userId = user.id AND workspaceMember.workspaceId = :workspaceId',
+        { workspaceId: workspaceId },
+      )
+      .select('user.id', 'userId')
+      .addSelect('user.imgUrl', 'imgUrl')
+      .addSelect('workspaceMember.nickname', 'nickname')
+      .where('favorites.workspace.id = :id', { id: workspaceId })
+      .andWhere('favorites.source.id = :id', { id: userId })
+      .getRawMany();
+
+    return favorites;
+  }
 
   // 즐겨찾기 추가/삭제 토글
   async toggleFavorites(

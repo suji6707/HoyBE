@@ -1,6 +1,5 @@
 import {
   Controller,
-  Delete,
   Get,
   Param,
   Post,
@@ -18,6 +17,14 @@ export class FavoritesController {
     private favoritesService: FavoritesService,
     private workspaceService: WorkspaceService,
   ) {}
+
+  // 사이드바 즐겨찾기 멤버 조회
+  @UseGuards(AuthGuard)
+  @Get()
+  async getFavorites(@Req() req, @Param('workspaceId') workspaceId: number) {
+    const userId = req.userId;
+    return await this.favoritesService.getFavorites(userId, workspaceId);
+  }
 
   // Flow 순서
   // 1. 즐겨찾기 가능한 멤버 조회 = getAvailableUsers + favorites 조건 flag
