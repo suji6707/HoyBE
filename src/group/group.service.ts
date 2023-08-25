@@ -51,7 +51,7 @@ export class GroupService {
     group.members = [user]; // 해당 유저를 그룹 멤버에 추가
 
     // 해당 그룹 저장
-    await this.groupRepo.insert(group); // tasks만 null 상태
+    await this.groupRepo.save(group); // tasks만 null 상태
     // memberIds가 있을 때만 해당 유저 추가
     if (memberIds) {
       await this.addUserToGroup(group, memberIds);
