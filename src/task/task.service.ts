@@ -68,7 +68,10 @@ export class TaskService {
       .andWhere('task.userId = :userId', { userId })
       .andWhere('task.scheduleDate >= :startDate', { startDate })
       .andWhere('task.scheduleDate <= :endDate', { endDate })
-      .orderBy('task.scheduleDate', 'ASC')
+      .orderBy({
+        'task.scheduleDate': 'ASC',
+        'task.updatedAt': 'DESC',
+      })
       .getMany();
 
     return tasks;

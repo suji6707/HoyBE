@@ -164,6 +164,7 @@ export class WorkspaceService {
       .innerJoin('workspaceMember.workspace', 'workspace')
       .select(['workspace.id', 'workspace.name', 'workspace.imgUrl'])
       .where('workspaceMember.member.id = :userId', { userId: userId })
+      .orderBy('workspace.id', 'ASC')
       .getRawMany();
 
     return workspaces;
