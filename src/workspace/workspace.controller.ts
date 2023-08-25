@@ -6,7 +6,9 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
 import { AuthGuard } from 'src/auth.guard';
@@ -14,6 +16,10 @@ import { CreateWorkspaceDto } from './dtos/create-workspace.dto';
 import { SendEmailDto } from './dtos/email-invitations.dto';
 import { EmailService } from './email.service';
 import { AcceptInvitationDto } from './dtos/accpet-invitation.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import * as path from 'path';
+import { join } from 'path';
 
 @Controller('workspace')
 export class WorkspaceController {
@@ -21,6 +27,26 @@ export class WorkspaceController {
     private workspaceService: WorkspaceService,
     private readonly emailService: EmailService,
   ) {}
+
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: path.join(__dirname, '..', '..', 'public', 'uploads'), // '../../public/uploads'
+        filename: (req, file, callback) => {
+          const originalname = WorkspaceService.cleanFilename(
+            file.originalname,
+          );
+          const filename = `${Date.now()}-${originalname}`;
+          callback(null, filename);
+        },
+      }),
+    }),
+  )
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log(file);
+    return { filePath: join(process.cwd(), 'uploads', file.filename) };
+  }
 
   // 워크스페이스 생성 (및 해당 유저 추가)
   @UseGuards(AuthGuard)

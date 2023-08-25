@@ -31,9 +31,6 @@ export class WorkspaceService {
     userId: number,
     createWorkspaceDto: CreateWorkspaceDto,
   ): Promise<Workspace> {
-    const workspace = new Workspace();
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-
     // 워크스페이스 객체 생성 (Workspace 테이블)
     const { name } = createWorkspaceDto;
     // 해당 유저가 만든 워크스페이스 이름 중 동일한 이름이 있으면 Conflict error
@@ -49,9 +46,11 @@ export class WorkspaceService {
     }
 
     // workspace 저장
+    const workspace = new Workspace();
+    const user = await this.userRepo.findOne({ where: { id: userId } });
     workspace.name = name;
     workspace.host = user;
-    await this.workspaceRepo.insert(workspace);
+    await this.workspaceRepo.insert(workspace); // memberCount 디폴트 1
 
     // WorkspaceMember 객체 생성
     const workspaceMember = new WorkspaceMember();
@@ -63,6 +62,14 @@ export class WorkspaceService {
     await this.workspaceMemberRepo.insert(workspaceMember);
 
     return workspace;
+  }
+
+  // 워크스페이스 사진 업로드
+  public static cleanFilename(filename: string): string {
+    return filename
+      .replace(/[^\w\s-.]/gi, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase();
   }
 
   // 이메일 초대를 통한 추가
@@ -104,11 +111,11 @@ export class WorkspaceService {
     }
     const user = await this.userRepo.findOne({ where: { id: userId } });
 
+    // WorkspaceMember 저장
     const workspaceMember = new WorkspaceMember();
     workspaceMember.workspace = workspace;
     workspaceMember.member = user;
     workspaceMember.nickname = user.name; // 구글 로그인 이름 넣기
-    // WorkspaceMember 객체 생성
     try {
       await this.workspaceMemberRepo.insert(workspaceMember);
     } catch (err) {
