@@ -32,7 +32,7 @@ export class Group {
   @JoinColumn({ name: 'creator' })
   creator: User;
 
-  @Column({ default: 1 })
+  @Column({ default: 0 })
   memberCount: number;
 
   // group : users

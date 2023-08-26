@@ -14,6 +14,7 @@ import { WorkspaceMember } from './entity/workspace_member.entity';
 import { WorkspaceInvitation } from './entity/workspace_invitations.entity';
 import { InvitationStatus } from './entity/workspace_invitations.entity';
 import { JwtService } from '@nestjs/jwt';
+import 'dotenv/config';
 
 @Injectable()
 export class WorkspaceService {
@@ -30,17 +31,18 @@ export class WorkspaceService {
   async createWorkspace(
     userId: number,
     createWorkspaceDto: CreateWorkspaceDto,
+    file?: Express.Multer.File,
   ): Promise<Workspace> {
-    // 워크스페이스 객체 생성 (Workspace 테이블)
+    // 워크스페이스 객체 생성
     const { name } = createWorkspaceDto;
-    // 해당 유저가 만든 워크스페이스 이름 중 동일한 이름이 있으면 Conflict error
-    const savedWorkspace = await this.workspaceRepo.findOne({
-      where: {
-        name: name,
-        host: { id: userId },
-      },
-      relations: ['host'],
-    });
+    // 해당 유저가 속한 워크스페이스 이름 중 동일한 이름이 있으면 Conflict error
+    const savedWorkspace = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .innerJoinAndSelect('workspaceMember.workspace', 'workspace')
+      .where('workspace.name = :name', { name: name })
+      .andWhere('workspaceMember.member.id = :id', { id: userId })
+      .getOne();
+
     if (savedWorkspace) {
       throw new ConflictException('이미 존재하는 워크스페이스입니다');
     }
@@ -50,26 +52,20 @@ export class WorkspaceService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     workspace.name = name;
     workspace.host = user;
+
+    workspace.imgUrl = file
+      ? `${process.env.SERVER_DOMAIN}/public/uploads/${file.filename}`
+      : null;
     await this.workspaceRepo.insert(workspace); // memberCount 디폴트 1
 
-    // WorkspaceMember 객체 생성
+    // 만든이를 WorkspaceMember에 추가
     const workspaceMember = new WorkspaceMember();
     workspaceMember.workspace = workspace;
     workspaceMember.member = user;
     workspaceMember.nickname = user.name;
-
-    // 해당 유저를 member로 추가 (매핑테이블)
     await this.workspaceMemberRepo.insert(workspaceMember);
 
     return workspace;
-  }
-
-  // 워크스페이스 사진 업로드
-  public static cleanFilename(filename: string): string {
-    return filename
-      .replace(/[^\w\s-.]/gi, '')
-      .replace(/\s+/g, '-')
-      .toLowerCase();
   }
 
   // 이메일 초대를 통한 추가

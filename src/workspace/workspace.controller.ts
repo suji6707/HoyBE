@@ -19,7 +19,6 @@ import { AcceptInvitationDto } from './dtos/accpet-invitation.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
-import { join } from 'path';
 
 @Controller('workspace')
 export class WorkspaceController {
@@ -28,37 +27,37 @@ export class WorkspaceController {
     private readonly emailService: EmailService,
   ) {}
 
-  @Post('upload')
+  // 워크스페이스 생성 (및 해당 유저 추가)
+  @UseGuards(AuthGuard)
+  @Post()
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
         destination: path.join(__dirname, '..', '..', 'public', 'uploads'), // '../../public/uploads'
         filename: (req, file, callback) => {
-          const originalname = WorkspaceService.cleanFilename(
-            file.originalname,
-          );
-          const filename = `${Date.now()}-${originalname}`;
+          const userId = (req as any).userId;
+          const extension = path.extname(file.originalname);
+          const filename = `${Date.now()}-user${userId}${extension}`;
           callback(null, filename);
         },
       }),
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log(file);
-    return { filePath: join(process.cwd(), 'uploads', file.filename) };
-  }
-
-  // 워크스페이스 생성 (및 해당 유저 추가)
-  @UseGuards(AuthGuard)
-  @Post()
   async createWorkspace(
+    @UploadedFile() file: Express.Multer.File | undefined,
     @Req() req,
     @Body() createWorkspaceDto: CreateWorkspaceDto,
   ) {
     const userId = req.userId;
+
+    if (file) {
+      console.log('fr: 워크스페이스 이미지 업로드: ', file);
+    }
+    // workspace 함수에 file 인자로 같이 전달하기. 안에서는 undefined가 아닐 경우 imgUrl에 넣고.
     return await this.workspaceService.createWorkspace(
       userId,
       createWorkspaceDto,
+      file,
     );
   }
 
