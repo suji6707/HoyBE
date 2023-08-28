@@ -15,18 +15,17 @@ export class FavoritesService {
   async getFavorites(userId: number, workspaceId: number) {
     const favorites = await this.favoritesRepo
       .createQueryBuilder('favorites')
-      .innerJoin('favorites.target', 'user')
+      .innerJoinAndSelect('favorites.target', 'targetUser')
       .innerJoin(
         'workspace_member',
         'workspaceMember',
-        'workspaceMember.userId = user.id AND workspaceMember.workspaceId = :workspaceId',
-        { workspaceId: workspaceId },
+        'workspaceMember.userId = targetUser.id AND workspaceMember.workspaceId = :workspaceId',
       )
-      .select('user.id', 'userId')
-      .addSelect('user.imgUrl', 'imgUrl')
+      .select('targetUser.id', 'userId')
+      .addSelect('targetUser.imgUrl', 'imgUrl')
       .addSelect('workspaceMember.nickname', 'nickname')
-      .where('favorites.workspace.id = :id', { id: workspaceId })
-      .andWhere('favorites.source.id = :id', { id: userId })
+      .where('favorites.workspace.id = :workspaceId', { workspaceId })
+      .andWhere('favorites.source.id = :userId', { userId })
       .getRawMany();
 
     return favorites;
