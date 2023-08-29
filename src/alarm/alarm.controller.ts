@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -9,16 +10,29 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from 'src/auth.guard';
 import { AlarmService } from './alarm.service';
+import { WorkspaceGuard } from 'src/workspace.guard';
 
 @Controller('workspace/:workspaceId/alarm')
 export class AlarmController {
   constructor(private alarmService: AlarmService) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, WorkspaceGuard)
   @Get()
   async getAlarmForUser(@Req() req, @Param('workspaceId') workspaceId: number) {
     const userId = req.userId;
     return await this.alarmService.getAlarmForUser(userId, workspaceId);
+  }
+
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Post(':alarmId/status')
+  async markAsRead(@Param('alarmId') alarmId: number) {
+    return await this.alarmService.markAsRead(alarmId);
+  }
+
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Delete(':alarmId')
+  async deleteAlarm(@Param('alarmId') alarmId: number) {
+    return await this.alarmService.deleteAlarm(alarmId);
   }
 }
 

@@ -1,14 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Alarm } from './entity/alarm.entity';
+import { Alarm, AlarmStatus } from './entity/alarm.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class AlarmService {
   constructor(@InjectRepository(Alarm) private alarmRepo: Repository<Alarm>) {}
 
-  // find 조건: Alarm.target.id가 userId(접속한 사람)에 해당하는 알림을 전부 조회
-  // source(코멘트 작성자)는 imgUrl, nickname(해당 workspaceId) 정보 필요
+  // Alarm.target.id가 userId(접속한 사람)에 해당하는 알림을 전부 조회
   async getAlarmForUser(userId: number, workspaceId: number) {
     const alarms = await this.alarmRepo
       .createQueryBuilder('alarm')
@@ -25,6 +24,7 @@ export class AlarmService {
       .addSelect('sourceUser.imgUrl', 'imgUrl')
       .addSelect('workspaceMember.nickname', 'nickname')
       .addSelect(['task.id', 'task.title'])
+      .addSelect(['alarm.id', 'alarm.status', 'alarm.createdAt'])
       .orderBy({
         'alarm.status': 'DESC',
         'alarm.createdAt': 'DESC',
@@ -34,12 +34,21 @@ export class AlarmService {
     return alarms;
   }
 
-  async markAsRead() {
-    // 특정 알림을 읽음 처리.
-    // id로 찾아서, 있으면 READ 처리.
+  async markAsRead(alarmId: number) {
+    const alarm = await this.alarmRepo.findOne({ where: { id: alarmId } });
+    if (!alarm) {
+      throw new NotFoundException('Alarm not found');
+    }
+    await this.alarmRepo.update(alarmId, { status: AlarmStatus.READ });
+    return { status: 'READ' };
   }
 
-  // async deleteAlarm() {}
+  async deleteAlarm(alarmId: number) {
+    const result = await this.alarmRepo.delete({ id: alarmId });
+    if (result.affected === 0) {
+      throw new NotFoundException('Alarm not found');
+    }
+  }
 }
 
 /**
