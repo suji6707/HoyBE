@@ -19,7 +19,7 @@ export class FavoritesService {
       .innerJoin(
         'workspace_member',
         'workspaceMember',
-        'workspaceMember.userId = targetUser.id AND workspaceMember.workspaceId = :workspaceId',
+        'workspaceMember.workspaceId = :workspaceId AND workspaceMember.userId = targetUser.id',
       )
       .select('targetUser.id', 'userId')
       .addSelect('targetUser.imgUrl', 'imgUrl')

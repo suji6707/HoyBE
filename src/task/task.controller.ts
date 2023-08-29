@@ -98,6 +98,13 @@ export class TaskController {
     return await this.taskService.updateTaskStatus(taskId);
   }
 
+  // task 수정 - 중요도 표시
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Put(':taskId/priority')
+  async updateTaskPriority(@Param('taskId') taskId: number) {
+    return await this.taskService.updateTaskPriority(taskId);
+  }
+
   // task 수정 - todo 디테일 수정
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Put(':taskId/detail')

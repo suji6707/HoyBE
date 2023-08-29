@@ -5,6 +5,7 @@ import { User } from 'src/users/entity/user.entity';
 import { Repository } from 'typeorm';
 import { Comment } from './entity/comment.entity';
 import { CreateCommentDto } from './dtos/create-comment.dto';
+import { Alarm, AlarmStatus } from 'src/alarm/entity/alarm.entity';
 
 @Injectable()
 export class CommentService {
@@ -12,19 +13,28 @@ export class CommentService {
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Task) private taskRepo: Repository<Task>,
     @InjectRepository(Comment) private commentRepo: Repository<Comment>,
+    @InjectRepository(Alarm) private alarmRepo: Repository<Alarm>,
   ) {}
 
   // 코멘트 생성
   async addComment(
-    userId: number,
+    userId: number, // 코멘트 단 사람
     taskId: number,
     createCommentDto: CreateCommentDto,
   ) {
     // 객체 생성
     const comment = new Comment();
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    const task = await this.taskRepo.findOne({ where: { id: taskId } });
+    const task = await this.taskRepo.findOne({
+      where: { id: taskId },
+      relations: ['user'],
+    });
     const { text } = createCommentDto;
+    console.log('fr: ', task);
+
+    if (!user || !task) {
+      throw new Error('User or Task not found');
+    }
 
     // 코멘트 DB 저장
     comment.task = task;
@@ -36,6 +46,14 @@ export class CommentService {
     await this.taskRepo.update(taskId, {
       commentCount: () => 'commentCount + 1',
     });
+
+    // Alarm DB 저장
+    const alarm = new Alarm();
+    alarm.source = user; // 코멘트 작성자
+    alarm.target = task.user; // Todo 작성자
+    alarm.task = task;
+    alarm.status = AlarmStatus.UNREAD; // 기본 상태
+    await this.alarmRepo.insert(alarm);
 
     const createdComment = await this.commentRepo
       .createQueryBuilder('comment')

@@ -25,17 +25,20 @@ export class User {
   @Column({ length: 127, unique: true }) // 일반 로그인 병행시에는 unique 제거
   email: string;
 
-  @Column({ length: 127, default: '' }) // 소셜로그인시 unique 제거
+  @Column({ length: 127, default: '', select: false }) // 소셜로그인시 unique 제거
   googleId: string;
 
   @Column({ length: 255, nullable: true }) // 프로필사진
   imgUrl?: string;
 
-  @Column({ length: 127, nullable: true })
+  @Column({ length: 127, nullable: true, select: false })
   phone?: string;
 
   @Column({ length: 511, nullable: true, select: false }) // 소셜로그인
   token?: string;
+
+  // @Column({ length: 511, nullable: true, select: false })
+  // fcmToken?: string;
 
   // Workspace 매핑
   @OneToMany(() => WorkspaceMember, (workspaceMember) => workspaceMember.member)

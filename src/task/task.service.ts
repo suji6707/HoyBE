@@ -34,7 +34,7 @@ export class TaskService {
 
     const task = new Task();
     task.title = title;
-    task.priority = priority;
+    task.priority = priority; // 따로 토글 API 있음
     task.status = status;
     task.scheduleDate = parseISO(date);
     task.workspace = workspace;
@@ -111,17 +111,25 @@ export class TaskService {
   // Task 수정 - 완료 여부 표시
   async updateTaskStatus(taskId: number) {
     const task = await this.taskRepo.findOne({ where: { id: taskId } });
-
     if (!task) {
       throw new NotFoundException(`Task with ID ${taskId} not found`);
     }
-
     const updatedStatus = !task.status;
     await this.taskRepo.update(taskId, { status: updatedStatus });
-
     // 업데이트된 상태에 따라 done 설정
     const done = updatedStatus ? 1 : 0;
     return { done };
+  }
+
+  // Task 수정 - 중요도 표시
+  async updateTaskPriority(taskId: number) {
+    const task = await this.taskRepo.findOne({ where: { id: taskId } });
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${taskId} not found`);
+    }
+    const updatedPriority = task.priority === 0 ? 1 : 0;
+    await this.taskRepo.update(taskId, { priority: updatedPriority });
+    return { updatedPriority };
   }
 
   // Task 수정 - 디테일 수정
