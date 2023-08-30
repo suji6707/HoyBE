@@ -70,6 +70,7 @@ export class TaskService {
       .andWhere('task.scheduleDate <= :endDate', { endDate })
       .orderBy({
         'task.status': 'ASC',
+        'task.priority': 'DESC',
         'task.scheduleDate': 'ASC',
         'task.updatedAt': 'DESC',
       })
@@ -91,6 +92,7 @@ export class TaskService {
       .andWhere('task.scheduleDate < :nextDate', { nextDate })
       .orderBy({
         'task.status': 'ASC',
+        'task.priority': 'DESC',
         'task.scheduleDate': 'ASC',
         'task.updatedAt': 'DESC',
       })
