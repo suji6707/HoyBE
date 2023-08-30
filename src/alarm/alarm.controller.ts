@@ -23,7 +23,7 @@ export class AlarmController {
     return await this.alarmService.getAlarmForUser(userId, workspaceId);
   }
 
-  @UseGuards(AuthGuard, WorkspaceGuard)
+  // @UseGuards(AuthGuard, WorkspaceGuard)
   @Post(':alarmId/status')
   async markAsRead(@Param('alarmId') alarmId: number) {
     return await this.alarmService.markAsRead(alarmId);

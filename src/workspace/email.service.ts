@@ -38,6 +38,8 @@ export class EmailService {
 
     if (user) {
       throw new ConflictException('해당 워크스페이스에 이미 초대된 멤버입니다');
+    } else {
+      return { answer: '초대 가능한 멤버입니다' };
     }
   }
 

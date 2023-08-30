@@ -26,8 +26,8 @@ export class AlarmService {
       .addSelect(['task.id', 'task.title'])
       .addSelect(['alarm.id', 'alarm.status', 'alarm.createdAt'])
       .orderBy({
-        'alarm.status': 'DESC',
-        'alarm.createdAt': 'DESC',
+        'alarm.status': 'ASC',
+        'alarm.updatedAt': 'DESC',
       })
       .getRawMany();
 
