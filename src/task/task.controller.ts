@@ -73,6 +73,22 @@ export class TaskController {
     return tasks;
   }
 
+  // 즐겨찾기 - 한 유저의 3일치 tasks 조회
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Get('member/:userId/three-days')
+  async get3DaysTasksForUser(
+    @Param('workspaceId') workspaceId: number,
+    @Param('userId') userId: number,
+    @Query('date') date?: string,
+  ) {
+    const tasks = await this.taskService.getTasksByDate(
+      workspaceId,
+      userId,
+      date,
+    );
+    return tasks;
+  }
+
   // task 상세 조회 (with Comments)
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get(':taskId')
