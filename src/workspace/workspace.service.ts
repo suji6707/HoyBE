@@ -54,7 +54,7 @@ export class WorkspaceService {
     workspace.host = user;
 
     workspace.imgUrl = file
-      ? `${process.env.SERVER_DOMAIN}/public/uploads/${file.filename}`
+      ? `${process.env.SERVER_DOMAIN}/public/uploads/workspace/${file.filename}`
       : null;
     await this.workspaceRepo.insert(workspace); // memberCount 디폴트 1
 
@@ -230,4 +230,22 @@ export class WorkspaceService {
 
     return availableUsers;
   }
+
+  // 워크스페이스내 유저 프로필 변경
+  //
+  async updateProfile(
+    userId: number,
+    workspaceId: number,
+    name?: string,
+    file?: Express.Multer.File,
+  ) {
+    // name은 기본 placeholder로 프론트에 넣어놓을 거라(body로 post), ? 안붙이는 게 나을듯.
+    // 1. userId를 findOne으로 객체 가져온 후
+    // 2. file이 있으면 user.imgUrl에 public/uploads/user/filename를 넣는다.
+    // user 객체를 .save() 한다.
+    // 3. workspace_member 테이블을 workspaceId, userId 조건으로 getOne 한다.
+    // nickname을 name으로 .update() 한다
+  }
+
+  //
 }

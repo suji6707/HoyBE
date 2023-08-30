@@ -19,6 +19,7 @@ import { AcceptInvitationDto } from './dtos/accpet-invitation.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
+import { WorkspaceGuard } from 'src/workspace.guard';
 
 @Controller('workspace')
 export class WorkspaceController {
@@ -33,7 +34,14 @@ export class WorkspaceController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: path.join(__dirname, '..', '..', 'public', 'uploads'), // '../../public/uploads'
+        destination: path.join(
+          __dirname,
+          '..',
+          '..',
+          'public',
+          'uploads',
+          'workspace',
+        ), // '../../public/uploads'
         filename: (req, file, callback) => {
           const userId = (req as any).userId;
           const extension = path.extname(file.originalname);
@@ -113,6 +121,55 @@ export class WorkspaceController {
       userId,
     );
   }
+
+  // 워크스페이스내 유저 프로필 변경 (이미지는 전체, 이름은 워크스페이스 한정)
+  // 이름은 body에 없으면 기본 이름으로 변경 안하도록 함.
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Post(':workspaceId/account/profile')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: path.join(
+          __dirname,
+          '..',
+          '..',
+          'public',
+          'uploads',
+          'user',
+        ),
+        filename: (req, file, callback) => {
+          const userId = (req as any).userId;
+          const extension = path.extname(file.originalname);
+          const filename = `${Date.now()}-user${userId}${extension}`;
+          callback(null, filename);
+        },
+      }),
+    }),
+  )
+  async updateProfile(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Req() req,
+    @Param('workspaceId') workspaceId: number,
+    @Body('name') name?: string,
+  ) {
+    const userId = req.userId;
+
+    if (file) {
+      console.log('fr: 설정창 유저 이미지 업로드: ', file);
+    }
+
+    return await this.workspaceService.updateProfile(
+      userId,
+      workspaceId,
+      name,
+      file,
+    );
+  }
+
+  // 계정 버튼 눌렀을 때 user.imgUrl 및 workspace_member.nickname 주기
+  // workspaceId, userId 있어야 함
+  // @UseGuards(AuthGuard, WorkspaceGuard)
+  // @Get(':workspaceId/account')
 
   // @Post('test')
   // async test() {
