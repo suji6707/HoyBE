@@ -43,7 +43,10 @@ export class EmailService {
     }
   }
 
-  public async sendEmail(workspaceId: number, emails: string[]): Promise<void> {
+  public async sendEmail(
+    workspaceId: number,
+    emails: string[],
+  ): Promise<{ messages: string[]; successCount: number }> {
     const workspace = await this.workspaceRepo.findOne({
       where: { id: workspaceId },
     });
@@ -51,11 +54,15 @@ export class EmailService {
       throw new NotFoundException('존재하지 않는 워크스페이스입니다');
     }
     // 해당 워크스페이스 초대 횟수 체크
-    if (workspace.invitationCount > 20) {
+    if (workspace.invitationCount > 10) {
       throw new Error(
         '초대 가능 인원을 초과하였습니다. Hoy 팀과 미팅 일정을 잡으셔서 더 많은 유저를 초대해보세요!',
       );
     }
+
+    const emailPromises = [];
+    let successCount = 0;
+
     for (const email of emails) {
       // 이미 초대된 멤버인지 확인
       const user = await this.workspaceMemberRepo
@@ -93,7 +100,7 @@ export class EmailService {
       const invitationLink = `${process.env.DOMAIN}/login?uniqueToken=${uniqueToken}`;
       console.log('fr: 이메일 초대링크: ', invitationLink);
 
-      this.mailerService
+      const mailPromise = this.mailerService
         .sendMail({
           to: email,
           from: 'noreply@nestjs.com',
@@ -103,15 +110,26 @@ export class EmailService {
         })
         .then((success) => {
           console.log(success);
+          successCount++;
+          return `사용자 ${email}에게 성공적으로 전송하였습니다.`;
         })
         .catch((err) => {
           console.log(err);
+          return `사용자 ${email}에게 전송 실패하였습니다.`;
         });
+
+      emailPromises.push(mailPromise);
     }
+
+    // 모든 이메일 전송이 완료될 때까지 기다림
+    const results = await Promise.all(emailPromises);
+
     // 워크스페이스 invitationCount
     await this.workspaceRepo.update(workspaceId, {
       invitationCount: () => `invitationCount + ${emails.length}`,
     });
+
+    return { messages: results, successCount: successCount };
   }
 }
 
