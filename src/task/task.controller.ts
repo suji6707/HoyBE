@@ -116,6 +116,16 @@ export class TaskController {
     return await this.taskService.updateTaskDetail(taskId, updateTaskDto);
   }
 
+  // task 수정 - 날짜 변경
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Put(':taskId/drag')
+  async updateTaskDate(
+    @Param('taskId') taskId: number,
+    @Body('date') date: string,
+  ) {
+    return await this.taskService.updateTaskDate(taskId, date);
+  }
+
   // task 삭제
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Delete(':taskId')

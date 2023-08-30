@@ -149,6 +149,17 @@ export class TaskService {
     });
   }
 
+  // Task 수정 - 날짜 변경
+  async updateTaskDate(taskId: number, date: string) {
+    const task = await this.taskRepo.findOne({ where: { id: taskId } });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+    const newDate = parseISO(date);
+    await this.taskRepo.update(taskId, { scheduleDate: newDate });
+    return { taskId, date };
+  }
+
   // Task 삭제
   async deleteTask(taskId: number) {
     return await this.taskRepo
