@@ -16,7 +16,7 @@ import { WorkspaceGuard } from 'src/workspace.guard';
 export class AlarmController {
   constructor(private alarmService: AlarmService) {}
 
-  @UseGuards(AuthGuard, WorkspaceGuard)
+  @UseGuards(AuthGuard)
   @Get()
   async getAlarmForUser(@Req() req, @Param('workspaceId') workspaceId: number) {
     const userId = req.userId;

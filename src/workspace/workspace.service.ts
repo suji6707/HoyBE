@@ -85,6 +85,12 @@ export class WorkspaceService {
     const workspaceId = decoded.workspaceId;
     const invitedEmail = decoded.email;
 
+    console.log(
+      'fr: uniqueToken 디코딩된 workspaceId, email: ',
+      workspaceId,
+      invitedEmail,
+    );
+
     // 유저 인증: 실제 로그인 유저(credential. email)과 초대된 유저(login()파라미터)가 같은지 확인
     if (email !== invitedEmail) {
       console.log(email, invitedEmail);
@@ -112,8 +118,10 @@ export class WorkspaceService {
     workspaceMember.workspace = workspace;
     workspaceMember.member = user;
     workspaceMember.nickname = user.name; // 구글 로그인 이름 넣기
+    console.log('fr: 초대할 워크스페이스 멤버: ', workspaceMember);
     try {
       await this.workspaceMemberRepo.insert(workspaceMember);
+      console.log('workspaceMemberRepo에 추가 성공!');
     } catch (err) {
       throw new ConflictException('이미 워크스페이스에 초대되었습니다');
     }
