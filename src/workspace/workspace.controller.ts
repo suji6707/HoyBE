@@ -131,7 +131,7 @@ export class WorkspaceController {
   // 워크스페이스내 유저 프로필 변경 (이미지는 전체, 이름은 워크스페이스 한정)
   // 이름은 body에 없으면 기본 이름으로 변경 안하도록 함.
   @UseGuards(AuthGuard, WorkspaceGuard)
-  @Post(':workspaceId/account/profile')
+  @Post(':workspaceId/user-account/profile')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -152,7 +152,7 @@ export class WorkspaceController {
       }),
     }),
   )
-  async updateProfile(
+  async updateUserProfile(
     @UploadedFile() file: Express.Multer.File | undefined,
     @Req() req,
     @Param('workspaceId') workspaceId: number,
@@ -164,7 +164,7 @@ export class WorkspaceController {
       console.log('fr: 설정창 유저 이미지 업로드: ', file);
     }
 
-    return await this.workspaceService.updateProfile(
+    return await this.workspaceService.updateUserProfile(
       userId,
       workspaceId,
       name,
@@ -172,10 +172,11 @@ export class WorkspaceController {
     );
   }
 
+  // 개인 프로필 페이지
   // 계정 버튼 눌렀을 때 user.imgUrl 및 workspace_member.nickname 주기
   // workspaceId, userId 있어야 함
-  // @UseGuards(AuthGuard, WorkspaceGuard)
-  // @Get(':workspaceId/account')
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Get(':workspaceId/user-account')
 
   // 워크스페이스 삭제
   @UseGuards(AuthGuard, WorkspaceGuard)
