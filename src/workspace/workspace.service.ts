@@ -255,5 +255,12 @@ export class WorkspaceService {
     // nickname을 name으로 .update() 한다
   }
 
-  //
+  // 워크스페이스 삭제
+  async deleteWorkspace(workspaceId: number) {
+    return await this.workspaceRepo
+      .createQueryBuilder('workspace')
+      .softDelete()
+      .where('id = :id', { id: workspaceId })
+      .execute();
+  }
 }

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -175,6 +176,13 @@ export class WorkspaceController {
   // workspaceId, userId 있어야 함
   // @UseGuards(AuthGuard, WorkspaceGuard)
   // @Get(':workspaceId/account')
+
+  // 워크스페이스 삭제
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Delete(':workspaceId')
+  async deleteWorkspace(@Param('workspaceId') workspaceId: number) {
+    return await this.workspaceService.deleteWorkspace(workspaceId);
+  }
 
   // @Post('test')
   // async test() {
