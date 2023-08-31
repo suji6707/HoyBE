@@ -54,7 +54,7 @@ export class EmailService {
       throw new NotFoundException('존재하지 않는 워크스페이스입니다');
     }
     // 해당 워크스페이스 초대 횟수 체크
-    if (workspace.invitationCount > 10) {
+    if (workspace.memberCount > 100) {
       throw new Error(
         '초대 가능 인원을 초과하였습니다. Hoy 팀과 미팅 일정을 잡으셔서 더 많은 유저를 초대해보세요!',
       );

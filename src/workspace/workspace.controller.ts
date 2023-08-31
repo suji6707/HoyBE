@@ -1,10 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
   Post,
-  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -82,17 +82,22 @@ export class WorkspaceController {
   @Get(':workspaceId/current-user')
   async getMyInfo(@Req() req, @Param('workspaceId') workspaceId: number) {
     const userId = req.userId;
-    console.log('fr: ', userId);
     return await this.workspaceService.getMyInfo(userId, workspaceId);
   }
 
   // 초대가능 이메일인지 확인
   @UseGuards(AuthGuard)
-  @Get(':workspaceId/invitations/availability')
+  @Post(':workspaceId/invitations/availability')
   async isEmailInvitable(
     @Param('workspaceId') workspaceId: number,
-    @Query('email') email: string,
+    @Body('email') email: string,
   ) {
+    console.log('email 들어왔는지', email);
+    const regrex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const isValidEmail = regrex.test(email);
+    if (!isValidEmail) {
+      throw new BadRequestException('유효하지 않은 이메일 주소입니다');
+    }
     return this.emailService.isEmailInvitable(workspaceId, email);
   }
 

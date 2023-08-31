@@ -17,12 +17,12 @@ export enum InvitationStatus {
 }
 
 @Entity({ name: 'workspace_invitation' })
-@Index('IDX_UNIQUE_TOKEN', ['uniqueToken'])
 export class WorkspaceInvitation {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
+  @Index()
   uniqueToken: string;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.workspaceInvitations, {

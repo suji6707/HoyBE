@@ -14,6 +14,7 @@ import { AppService } from './app.service';
 import { CommentModule } from './comment/comment.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { AlarmModule } from './alarm/alarm.module';
+import 'dotenv/config';
 
 @Module({
   imports: [
@@ -30,8 +31,8 @@ import { AlarmModule } from './alarm/alarm.module';
         port: 587,
         secure: false,
         auth: {
-          user: 'oliver6707@gmail.com',
-          pass: 'jfxjaommkpeoifnb',
+          user: process.env.MAILER_USER,
+          pass: process.env.MAILER_PASS,
         },
       },
       defaults: {
