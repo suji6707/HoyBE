@@ -1,5 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import 'dotenv/config';
+import { DataSource, DataSourceOptions } from 'typeorm';
 
 export const TypeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
@@ -11,5 +12,7 @@ export const TypeOrmConfig: TypeOrmModuleOptions = {
   entities: ['dist/**/*.entity.{js,ts}'],
   migrations: ['dist/migrations/*.{js,ts}'],
   autoLoadEntities: true,
-  synchronize: true,
+  synchronize: false,
 };
+
+export default new DataSource(TypeOrmConfig as DataSourceOptions);
