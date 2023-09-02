@@ -22,9 +22,7 @@ export class Group {
   name: string;
 
   // group : workspace
-  @ManyToOne(() => Workspace, (workspace) => workspace.groups, {
-    cascade: true,
-  })
+  @ManyToOne(() => Workspace, (workspace) => workspace.groups)
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
 

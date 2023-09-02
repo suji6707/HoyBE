@@ -262,8 +262,10 @@ export class WorkspaceService {
     const workspaceMemberId = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
       .select('workspaceMember.id')
-      .where('workspaceMember.workspace.id = :id', { id: workspaceId })
-      .andWhere('workspaceMember.member.id = :id', { id: userId })
+      .where('workspaceMember.workspace.id = :workspaceId', {
+        workspaceId: workspaceId,
+      })
+      .andWhere('workspaceMember.member.id = :userId', { userId: userId })
       .getOne();
 
     console.log(workspaceMemberId);

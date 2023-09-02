@@ -52,15 +52,17 @@ export class Workspace {
   workspaceInvitations: WorkspaceInvitation[];
 
   // workspace: group
-  @OneToMany(() => Group, (group) => group.workspace)
+  @OneToMany(() => Group, (group) => group.workspace, { cascade: true })
   groups: Group[];
 
   // worksapce : task
-  @OneToMany(() => Task, (task) => task.workspace)
+  @OneToMany(() => Task, (task) => task.workspace, { cascade: true })
   tasks: Task[];
 
   // worksapce : favorites
-  @OneToMany(() => Task, (task) => task.workspace)
+  @OneToMany(() => Favorites, (favorite) => favorite.workspace, {
+    cascade: true,
+  })
   favorites: Favorites[];
 
   @CreateDateColumn({ select: false })
