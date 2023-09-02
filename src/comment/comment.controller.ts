@@ -45,7 +45,10 @@ export class CommentController {
 
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Delete(':commentId')
-  async deleteComment(@Param('commentId') commentId: number) {
-    return await this.commentService.deleteComment(commentId);
+  async deleteComment(
+    @Param('taskId') taskId: number,
+    @Param('commentId') commentId: number,
+  ) {
+    return await this.commentService.deleteComment(taskId, commentId);
   }
 }

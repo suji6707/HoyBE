@@ -69,7 +69,6 @@ export class CommentService {
       .where('comment.id = :id', { id: comment.id })
       .getMany();
 
-    console.log('fr: ', createdComment);
     return createdComment;
   }
 
@@ -116,11 +115,15 @@ export class CommentService {
   }
 
   // 코멘트 삭제
-  async deleteComment(commentId: number) {
-    return await this.commentRepo
+  async deleteComment(taskId: number, commentId: number) {
+    await this.commentRepo
       .createQueryBuilder('comment')
       .delete()
       .where('id = :id', { id: commentId })
       .execute();
+
+    await this.taskRepo.update(taskId, {
+      commentCount: () => 'commentCount - 1',
+    });
   }
 }

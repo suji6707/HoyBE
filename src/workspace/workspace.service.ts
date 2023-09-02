@@ -181,6 +181,16 @@ export class WorkspaceService {
     return workspaces;
   }
 
+  async getCurrentWorkspace(workspaceId: number) {
+    const workspace = await this.workspaceRepo
+      .createQueryBuilder('workspace')
+      .select(['workspace.id', 'workspace.name', 'workspace.imgUrl'])
+      .where('workspace.id = :id', { id: workspaceId })
+      .getOne();
+
+    return workspace;
+  }
+
   // 워크스페이스 멤버 조회
   async getAvailableUsers(workspaceId: number) {
     const query = await this.workspaceMemberRepo

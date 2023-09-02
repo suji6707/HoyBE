@@ -78,6 +78,13 @@ export class WorkspaceController {
     return await this.workspaceService.findMyWorkspaces(userId);
   }
 
+  // 내 워크스페이스 조회
+  @UseGuards(AuthGuard)
+  @Get(':workspaceId')
+  async getCurrentWorkspace(@Param('workspaceId') workspaceId: number) {
+    return await this.workspaceService.getCurrentWorkspace(workspaceId);
+  }
+
   // 해당 워크스페이스에서 내 정보 (sidebar)
   @UseGuards(AuthGuard)
   @Get(':workspaceId/current-user')

@@ -15,4 +15,7 @@ export const TypeOrmConfig: TypeOrmModuleOptions = {
   synchronize: false,
 };
 
-export default new DataSource(TypeOrmConfig as DataSourceOptions);
+export default new DataSource({
+  ...(TypeOrmConfig as DataSourceOptions),
+  migrations: ['src/migrations/*.{js,ts}'],
+});
