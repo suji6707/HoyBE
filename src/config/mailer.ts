@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import { MailerOptions } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import 'dotenv/config';
 
 export const MailerConfig: MailerOptions = {
   transport: {
@@ -9,7 +9,7 @@ export const MailerConfig: MailerOptions = {
     secure: false,
     auth: {
       user: process.env.MAILER_USER,
-      pass: process.env.MAILER_USER,
+      pass: process.env.MAILER_PASS,
     },
   },
   defaults: {

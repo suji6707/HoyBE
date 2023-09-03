@@ -11,7 +11,9 @@ import {
 import { AuthGuard } from 'src/auth.guard';
 import { AlarmService } from './alarm.service';
 import { WorkspaceGuard } from 'src/workspace.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('Authorization')
 @Controller('workspace/:workspaceId/alarm')
 export class AlarmController {
   constructor(private alarmService: AlarmService) {}

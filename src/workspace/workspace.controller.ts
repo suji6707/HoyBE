@@ -21,7 +21,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
 import { WorkspaceGuard } from 'src/workspace.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('Authorization')
 @Controller('workspace')
 export class WorkspaceController {
   constructor(
@@ -182,15 +184,51 @@ export class WorkspaceController {
   // 개인 프로필 페이지
   // 계정 버튼 눌렀을 때 user.imgUrl 및 workspace_member.nickname 주기
   // workspaceId, userId 있어야 함
-  @UseGuards(AuthGuard, WorkspaceGuard)
-  @Get(':workspaceId/user-account')
+  // @UseGuards(AuthGuard, WorkspaceGuard)
+  // @Get(':workspaceId/user-account')
 
-  // 워크스페이스 삭제
+  // 워크스페이스 삭제 -> 팝업창 확인 눌렀을 때
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Delete(':workspaceId')
-  async deleteWorkspace(@Param('workspaceId') workspaceId: number) {
-    return await this.workspaceService.deleteWorkspace(workspaceId);
+  async deleteWorkspace(@Req() req, @Param('workspaceId') workspaceId: number) {
+    console.log('fr: workspaceId', workspaceId);
+
+    const userId = req.userId;
+    return await this.workspaceService.deleteWorkspace(userId, workspaceId);
   }
+
+  // '나가기' & adminCount -> admin이 2 이상이면 member 테이블 삭제.
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Get(':workspaceId/leave')
+  async leaveWorkspace(@Req() req, @Param('workspaceId') workspaceId: number) {
+    const userId = req.userId;
+    return await this.workspaceService.leaveWorkspace(userId, workspaceId);
+  }
+
+  // 워크스페이스 관리자 조회
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Get(':workspaceId/account/members')
+  async getAvailableUsers(@Param('workspaceId') workspaceId: number) {
+    // getAvailableUsers
+    const availableUsers = await this.workspaceService.getAvailableUsers(
+      workspaceId,
+    );
+    return availableUsers;
+  }
+
+  // 관리자 권한 추가
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Post(':workspaceId/account/admin/:userId')
+  async addAdminToWorkspace(
+    @Param('workspaceId') workspaceId: number,
+    @Param('userId') userId: number,
+  ) {
+    return await this.workspaceService.addAdminToWorkspace(workspaceId, userId);
+  }
+
+  // // 관리자 권한 삭제
+  // @UseGuards(AuthGuard, WorkspaceGuard)
+  // @Delete(':workspaceId/account/admin/:userId')
 
   // @Post('test')
   // async test() {

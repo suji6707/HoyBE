@@ -27,9 +27,9 @@ export class Workspace {
   @Column({ length: 511, nullable: true })
   imgUrl?: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true }) // $
   @JoinColumn({ name: 'host' }) // 방장 userId
-  host: User;
+  host: User | null;
 
   @Column({ default: 1 }) // 실제 들어온 멤버 수
   memberCount: number;
@@ -41,6 +41,7 @@ export class Workspace {
   @OneToMany(
     () => WorkspaceMember,
     (workspaceMember) => workspaceMember.workspace,
+    { cascade: true },
   )
   workspaceMembers: WorkspaceMember[];
 
@@ -48,6 +49,7 @@ export class Workspace {
   @OneToMany(
     () => WorkspaceInvitation,
     (workspaceInvitation) => workspaceInvitation.workspace,
+    { cascade: true },
   )
   workspaceInvitations: WorkspaceInvitation[];
 

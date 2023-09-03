@@ -16,7 +16,9 @@ import { GroupService } from './group.service';
 import { WorkspaceGuard } from 'src/workspace.guard';
 import { UpdateGroupDto } from './dtos/update-group.dto';
 import { WorkspaceService } from 'src/workspace/workspace.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('Authorization')
 @Controller('workspace/:workspaceId/group')
 export class GroupController {
   constructor(

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -63,6 +65,7 @@ export class WorkspaceService {
     workspaceMember.workspace = workspace;
     workspaceMember.member = user;
     workspaceMember.nickname = user.name;
+    workspaceMember.admin = true;
     await this.workspaceMemberRepo.insert(workspaceMember);
 
     return workspace;
@@ -150,12 +153,9 @@ export class WorkspaceService {
     console.log('fr: ', userId);
     const user = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
-      .innerJoinAndSelect(
-        'workspaceMember.workspace',
-        'workspace',
-        'workspace.id = :workspaceId',
-        { workspaceId: workspaceId },
-      )
+      .where('workspaceMember.workspaceId = :workspaceId', {
+        workspaceId: workspaceId,
+      })
       .innerJoinAndSelect('workspaceMember.member', 'user', 'user.id = :id', {
         id: userId,
       })
@@ -164,7 +164,6 @@ export class WorkspaceService {
       .addSelect('workspaceMember.nickname', 'nickname')
       .getRawOne();
 
-    console.log('fr: ', user);
     return user;
   }
 
@@ -195,16 +194,15 @@ export class WorkspaceService {
   async getAvailableUsers(workspaceId: number) {
     const query = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
-      .innerJoinAndSelect(
-        'workspaceMember.workspace',
-        'workspace',
-        'workspace.id = :workspaceId',
-        { workspaceId: workspaceId },
-      )
+      .where('workspaceMember.workspaceId = :workspaceId', {
+        workspaceId: workspaceId,
+      })
       .innerJoin('workspaceMember.member', 'user')
       .select('user.id', 'userId')
       .addSelect('user.imgUrl', 'imgUrl')
-      .addSelect('workspaceMember.nickname', 'nickname');
+      .addSelect('workspaceMember.nickname', 'nickname')
+      .addSelect('workspaceMember.admin', 'admin')
+      .orderBy('workspaceMember.admin', 'DESC');
 
     // console.log(query.getSql());
     const workspaceMembers = await query.getRawMany();
@@ -229,6 +227,29 @@ export class WorkspaceService {
     }
     return workspaceMembers;
   }
+
+  // 관리자 권한 추가
+  async addAdminToWorkspace(workspaceId: number, userId: number) {
+    const workspaceMember = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .where('workspaceMember.workspaceId = :workspaceId', {
+        workspaceId: workspaceId,
+      })
+      .andWhere('workspaceMember.userId = :userId', { userId: userId })
+      .getOne();
+
+    if (!workspaceMember) {
+      throw new NotFoundException(
+        '해당 유저는 워크스페이스에 속해있지 않습니다',
+      );
+    }
+
+    workspaceMember.admin = true;
+    await this.workspaceMemberRepo.save(workspaceMember);
+    return workspaceMember;
+  }
+
+  // 관리자 권한 삭제
 
   // 닉네임 검색
   async searchMembers(workspaceId: number, query: string) {
@@ -293,11 +314,124 @@ export class WorkspaceService {
   }
 
   // 워크스페이스 삭제
-  async deleteWorkspace(workspaceId: number) {
+  async deleteWorkspace(userId: number, workspaceId: number) {
+    // 멤버 삭제 후 워크스페이스 삭제
+    // await this.deleteWorkspaceMembrer(workspaceId, userId);
+    console.log('fr: workspaceId', workspaceId);
     return await this.workspaceRepo
       .createQueryBuilder('workspace')
       .softDelete()
       .where('id = :id', { id: workspaceId })
       .execute();
+  }
+
+  async deleteWorkspaceMembrer(workspaceId: number, userId: number) {
+    // user를 workspace-member 테이블에서 삭제
+    await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .delete()
+      .where('userId = :userId', { userId: userId })
+      .andWhere('workspaceId = :workspaceId', { workspaceId: workspaceId })
+      .execute();
+
+    // workspace memberCount -1
+    await this.workspaceRepo.update(workspaceId, {
+      memberCount: () => 'memberCount - 1',
+    });
+    return { deleted_member: userId };
+  }
+
+  // 워크스페이스 나가기
+  async leaveWorkspace(userId: number, workspaceId: number) {
+    const workspace = await this.workspaceRepo
+      .createQueryBuilder('workspace')
+      .where('workspace.id = :workspaceId', { workspaceId: workspaceId })
+      .andWhere('workspace.host = :userId', { userId: userId })
+      .getOne();
+
+    // 1. user가 host인 경우
+    if (workspace) {
+      const adminList = await this.workspaceMemberRepo
+        .createQueryBuilder('workspaceMember')
+        .select('workspaceMember.userId')
+        .where('workspaceMember.workspaceId = :workspaceId', {
+          workspaceId: workspaceId,
+        })
+        .andWhere('workspaceMember.admin = true')
+        .getRawMany();
+
+      // Admin.length > 1
+      if (adminList.length > 1) {
+        console.log('fr: Admin.length > 1');
+        /******************************** 특수 case - 내가 host일 때 *******************************/
+        const adminIds = adminList.map((item) => item.userId);
+        // 현재 userId를 배열에서 제외.
+        const filteredAdminIds = adminIds.filter((id) => id !== userId); // 이미 제외되어있을 것.
+
+        // host를 admin 첫 원소로 이관
+        const newhostId = filteredAdminIds[0];
+        const newhost = await this.userRepo.findOne({
+          where: { id: newhostId },
+        });
+        await this.workspaceRepo.update(workspaceId, { host: newhost });
+        /******************************** 특수 case - 내가 host일 때 *******************************/
+
+        // host user를 workspace-member 테이블에서 삭제
+        console.log('fr: Host leaved');
+        const deleted_member = await this.deleteWorkspaceMembrer(
+          workspaceId,
+          userId,
+        );
+
+        return { deleted_member, newhost };
+      }
+      // Admin.length == 1 이면 에러 메시지 전송
+      // 팝업창을 띄운 후 확인버튼 누르면 삭제 API 실행
+      throw new HttpException(
+        `워크스페이스 관리자가 남아있지 않습니다. 정말로 나가시겠습니까? 워크스페이스내 모든 데이터가 사라집니다.`,
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const workspaceWhereIamAdmin = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .select('workspaceMember.userId')
+      .where('workspaceMember.workspaceId = :workspaceId', {
+        workspaceId: workspaceId,
+      })
+      .andWhere('workspaceMember.userId = :userId', { userId: userId })
+      .andWhere('workspaceMember.admin = true')
+      .getRawOne();
+
+    console.log('userId', userId);
+    console.log('workspaceWhereIamAdmin', workspaceWhereIamAdmin);
+
+    // 2. user가 host는 아니지만 admin인 경우
+    if (workspaceWhereIamAdmin) {
+      console.log('fr: I am Admin, not a Host');
+      const adminList = await this.workspaceMemberRepo
+        .createQueryBuilder('workspaceMember')
+        .select('workspaceMember.userId')
+        .where('workspaceMember.workspaceId = :workspaceId', {
+          workspaceId: workspaceId,
+        })
+        .andWhere('workspaceMember.admin = true')
+        .getRawMany();
+
+      // Case 1. Admin.length > 1
+      if (adminList.length > 1) {
+        console.log('fr: Admin leaved');
+        return await this.deleteWorkspaceMembrer(workspaceId, userId);
+      }
+      // Case 2. not: 내가 마지막 admin. (위의 host case일 수밖에)
+      throw new HttpException(
+        `워크스페이스 관리자가 남아있지 않습니다. 정말로 나가시겠습니까?\
+        워크스페이스내 모든 데이터가 사라집니다.`,
+        HttpStatus.CONFLICT,
+      );
+    }
+    // 3. 일반 user
+    console.log('fr: general user leaved');
+    return await this.deleteWorkspaceMembrer(workspaceId, userId);
   }
 }

@@ -13,7 +13,9 @@ import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import { AuthGuard } from 'src/auth.guard';
 import { WorkspaceGuard } from 'src/workspace.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('Authorization')
 @Controller('workspace/:workspaceId/tasks/:taskId/comment')
 export class CommentController {
   constructor(private commentService: CommentService) {}

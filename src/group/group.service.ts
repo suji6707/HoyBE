@@ -100,12 +100,9 @@ export class GroupService {
     }
     const groupMembersWithNicknames = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
-      .innerJoinAndSelect(
-        'workspaceMember.workspace',
-        'workspace',
-        'workspace.id = :workspaceId',
-        { workspaceId: workspaceId },
-      )
+      .where('workspaceMember.workspaceId = :workspaceId', {
+        workspaceId: workspaceId,
+      })
       .innerJoin('workspaceMember.member', 'user')
       .where('user.id IN (:...groupMemberIds)', {
         groupMemberIds: groupMemberIds,

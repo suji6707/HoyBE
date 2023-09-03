@@ -19,16 +19,19 @@ export class WorkspaceMember {
   id: number;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.workspaceMembers, {
-    cascade: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
 
-  @ManyToOne(() => User, (workspace) => workspace.workspaceMembers, {
-    cascade: true,
+  @ManyToOne(() => User, (user) => user.workspaceMembers, {
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
   member: User;
+
+  @Column({ default: false })
+  admin: boolean;
 
   // 워크스페이스마다 닉네임 설정 가능
   // accpetInvitation() 함수에서 User.name을 nickname에 넣음.

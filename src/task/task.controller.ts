@@ -16,7 +16,9 @@ import { TaskService } from './task.service';
 import { CreateTaskDto } from './dtos/create-task.dto';
 import { CommentService } from 'src/comment/comment.service';
 import { UpdateTaskDto } from './dtos/update-task.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('Authorization')
 @Controller('workspace/:workspaceId/tasks')
 export class TaskController {
   constructor(

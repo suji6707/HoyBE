@@ -1,3 +1,4 @@
+import { Alarm } from 'src/alarm/entity/alarm.entity';
 import { Comment } from 'src/comment/entity/comment.entity';
 import { Favorites } from 'src/favorites/entity/favorites.entity';
 import { Group } from 'src/group/entity/group.entity';
@@ -40,28 +41,47 @@ export class User {
   // @Column({ length: 511, nullable: true, select: false })
   // fcmToken?: string;
 
-  // Workspace 매핑
-  @OneToMany(() => WorkspaceMember, (workspaceMember) => workspaceMember.member)
+  // Workspace Member 매핑
+  @OneToMany(
+    () => WorkspaceMember,
+    (workspaceMember) => workspaceMember.member,
+    { cascade: true },
+  )
   workspaceMembers: WorkspaceMember[];
 
-  // Group 매핑
-  @ManyToMany(() => Group, (group) => group.members)
+  // Group Member 매핑
+  @ManyToMany(() => Group, (group) => group.members, { cascade: true })
   groups: Group[];
 
   // Todo 매핑
-  @OneToMany(() => Task, (task) => task.user)
+  @OneToMany(() => Task, (task) => task.user, { cascade: true })
   tasks: Task[];
 
   // Comment 매핑
-  @OneToMany(() => Comment, (comment) => comment.user)
+  @OneToMany(() => Comment, (comment) => comment.user, { cascade: true })
   comments: Comment[];
 
   // Favorites 매핑
-  @OneToMany(() => Favorites, (favorites) => favorites.target)
+  @OneToMany(() => Favorites, (favorites) => favorites.target, {
+    cascade: true,
+  })
   favorites: Favorites[]; // 내가 즐겨찾기 설정한 사람들
 
-  @OneToMany(() => Favorites, (favorites) => favorites.source)
+  @OneToMany(() => Favorites, (favorites) => favorites.source, {
+    cascade: true,
+  })
   favoritedBy: Favorites[]; // 나를 즐겨찾기로 설정한 사람들
+
+  // Alarm 매핑
+  @OneToMany(() => Alarm, (alarm) => alarm.target, {
+    cascade: true,
+  })
+  alarmTo: Alarm[]; // 누구에 대한
+
+  @OneToMany(() => Alarm, (alarm) => alarm.source, {
+    cascade: true,
+  })
+  alarmBy: Alarm[]; // 누가 올린
 
   @CreateDateColumn({ select: false })
   createdAt!: Date;

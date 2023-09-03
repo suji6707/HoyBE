@@ -17,15 +17,17 @@ export class Favorites {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Workspace, (workspace) => workspace.favorites)
+  @ManyToOne(() => Workspace, (workspace) => workspace.favorites, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
 
-  @ManyToOne(() => User, (user) => user.favoritedBy)
+  @ManyToOne(() => User, (user) => user.favoritedBy, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'source' })
   source: User;
 
-  @ManyToOne(() => User, (user) => user.favorites)
+  @ManyToOne(() => User, (user) => user.favorites, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'target' })
   target: User;
 

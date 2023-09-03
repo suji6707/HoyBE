@@ -10,7 +10,9 @@ import {
 import { FavoritesService } from './favorites.service';
 import { AuthGuard } from 'src/auth.guard';
 import { WorkspaceService } from 'src/workspace/workspace.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('Authorization')
 @Controller('workspace/:workspaceId/favorites')
 export class FavoritesController {
   constructor(

@@ -7,6 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -28,19 +29,23 @@ export class Alarm {
   status: AlarmStatus;
 
   // 누구에 대한
-  @ManyToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.alarmTo, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'target' })
   target: User;
 
+  // 누가 올린
+  @ManyToOne(() => User, (user) => user.alarmBy, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'source' })
+  source: User;
+
   // 어떤 Todo에 대한
-  @ManyToOne(() => Task, { cascade: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Task, (task) => task.alarms, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'task' })
   task: Task;
 
-  // 누가 올린 Comment
-  @ManyToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'source' })
-  source: User;
+  // @OneToOne(() => Comment, (comment) => comment.alarm)
+  // @JoinColumn({ name: 'comment' })
+  // comment: Comment;
 
   @CreateDateColumn()
   createdAt!: Date;

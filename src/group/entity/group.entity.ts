@@ -22,11 +22,13 @@ export class Group {
   name: string;
 
   // group : workspace
-  @ManyToOne(() => Workspace, (workspace) => workspace.groups)
+  @ManyToOne(() => Workspace, (workspace) => workspace.groups, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'creator' })
   creator: User;
 
@@ -34,7 +36,7 @@ export class Group {
   memberCount: number;
 
   // group : users
-  @ManyToMany(() => User, (user) => user.groups)
+  @ManyToMany(() => User, (user) => user.groups, { onDelete: 'CASCADE' })
   @JoinTable({ name: 'group_member' })
   members: User[] | null;
 

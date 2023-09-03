@@ -26,7 +26,7 @@ export class WorkspaceInvitation {
   uniqueToken: string;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.workspaceInvitations, {
-    cascade: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
