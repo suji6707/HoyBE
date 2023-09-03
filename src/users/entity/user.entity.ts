@@ -29,8 +29,8 @@ export class User {
   @Column({ length: 127, default: '', select: false }) // 소셜로그인시 unique 제거
   googleId: string;
 
-  @Column({ length: 255, nullable: true }) // 프로필사진
-  imgUrl?: string;
+  @Column({ length: 255 }) // 프로필사진
+  imgUrl: string;
 
   @Column({ length: 127, nullable: true, select: false })
   phone?: string;

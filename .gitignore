@@ -39,4 +39,7 @@ lerna-debug.log*
 # .gitignore
 
 # Public
-/public
+/public/**/*.jpg
+/public/**/*.png
+/public/**/*.jpeg
+!/public/**/noimage.png
