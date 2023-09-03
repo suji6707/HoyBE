@@ -71,6 +71,23 @@ export class WorkspaceService {
     return workspace;
   }
 
+  // 워크스페이스 프로필 변경
+  async updateWorkspaceProfile(
+    workspaceId: number,
+    name?: string,
+    file?: Express.Multer.File,
+  ) {
+    const workspace = await this.workspaceRepo.findOne({
+      where: { id: workspaceId },
+    });
+    workspace.name = name ? name : workspace.name;
+    workspace.imgUrl = file
+      ? `${process.env.SERVER_DOMAIN}/public/uploads/workspace/${file.filename}`
+      : workspace.imgUrl;
+
+    return await this.workspaceRepo.save(workspace);
+  }
+
   // 이메일 초대를 통한 추가
   async acceptInvitaion(uniqueToken: string, email: string, userId: number) {
     let decoded;
@@ -275,7 +292,7 @@ export class WorkspaceService {
   async updateUserProfile(
     userId: number,
     workspaceId: number,
-    name: string,
+    name?: string,
     file?: Express.Multer.File,
   ) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
@@ -286,31 +303,35 @@ export class WorkspaceService {
 
     user.imgUrl = file
       ? `${process.env.SERVER_DOMAIN}/public/uploads/user/${file.filename}`
-      : null;
+      : user.imgUrl;
     await this.userRepo.save(user);
 
-    // 워크스페이스에서 사용할 닉네임 변경
-    const workspaceMemberId = await this.workspaceMemberRepo
-      .createQueryBuilder('workspaceMember')
-      .select('workspaceMember.id')
-      .where('workspaceMember.workspace.id = :workspaceId', {
-        workspaceId: workspaceId,
-      })
-      .andWhere('workspaceMember.member.id = :userId', { userId: userId })
-      .getOne();
+    // 닉네임을 변경할 경우
+    if (name) {
+      // 워크스페이스에서 사용할 닉네임 변경
+      const workspaceMemberId = await this.workspaceMemberRepo
+        .createQueryBuilder('workspaceMember')
+        .select('workspaceMember.id')
+        .where('workspaceMember.workspace.id = :workspaceId', {
+          workspaceId: workspaceId,
+        })
+        .andWhere('workspaceMember.member.id = :userId', { userId: userId })
+        .getOne();
 
-    console.log(workspaceMemberId);
-    try {
-      await this.workspaceMemberRepo.update(workspaceMemberId, {
-        nickname: name,
-      });
-      return {
-        message: `사용자[${userId}]이 워크스페이스[${workspaceId}]의 닉네임을 "${name}"로 변경하였습니다.`,
-      };
-    } catch (err) {
-      console.error(err);
-      throw new Error('workspaceMember 업데이트 실패');
+      console.log(workspaceMemberId);
+      try {
+        await this.workspaceMemberRepo.update(workspaceMemberId, {
+          nickname: name,
+        });
+        return {
+          message: `사용자[${userId}]이 워크스페이스[${workspaceId}]의 닉네임을 "${name}"로 변경하였습니다.`,
+        };
+      } catch (err) {
+        console.error(err);
+        throw new Error('workspaceMember 업데이트 실패');
+      }
     }
+    return { res: '이미지 업로드에 성공하였습니다' };
   }
 
   // 워크스페이스 삭제

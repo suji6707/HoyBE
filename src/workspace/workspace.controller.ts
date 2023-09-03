@@ -181,11 +181,45 @@ export class WorkspaceController {
     );
   }
 
-  // 개인 프로필 페이지
-  // 계정 버튼 눌렀을 때 user.imgUrl 및 workspace_member.nickname 주기
-  // workspaceId, userId 있어야 함
-  // @UseGuards(AuthGuard, WorkspaceGuard)
-  // @Get(':workspaceId/user-account')
+  // 워크스페이스 프로필 변경
+  // 이름은 body에 없으면 기본 이름으로 변경 안하도록 함.
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Post(':workspaceId/profile')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: path.join(
+          __dirname,
+          '..',
+          '..',
+          'public',
+          'uploads',
+          'workspace',
+        ),
+        filename: (req, file, callback) => {
+          const userId = (req as any).userId;
+          const extension = path.extname(file.originalname);
+          const filename = `${Date.now()}-user${userId}${extension}`;
+          callback(null, filename);
+        },
+      }),
+    }),
+  )
+  async updateWorkspaceProfile(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Param('workspaceId') workspaceId: number,
+    @Body('name') name?: string,
+  ) {
+    if (file) {
+      console.log('fr: 설정창 워크스페이스 이미지 업로드: ', file);
+    }
+
+    return await this.workspaceService.updateWorkspaceProfile(
+      workspaceId,
+      name,
+      file,
+    );
+  }
 
   // 워크스페이스 삭제 -> 팝업창 확인 눌렀을 때
   @UseGuards(AuthGuard, WorkspaceGuard)
