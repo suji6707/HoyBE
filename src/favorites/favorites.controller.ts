@@ -81,8 +81,6 @@ export class FavoritesController {
       workspaceId,
     );
 
-    console.log(userId);
-    console.log(favoriteMembers);
     const queryResult = resultMembers.map((member) => {
       return {
         ...member,

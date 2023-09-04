@@ -273,10 +273,32 @@ export class WorkspaceService {
 
     workspaceMember.admin = true;
     await this.workspaceMemberRepo.save(workspaceMember);
-    return workspaceMember;
+    return { userId: userId, isAdmin: true };
   }
 
   // 관리자 권한 삭제
+  async deleteAdminFromWorkspace(workspaceId: number, userId: number) {
+    const workspaceMember = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
+      .andWhere('workspaceMember.userId = :userId', { userId: userId })
+      .getOne();
+
+    if (!workspaceMember) {
+      throw new NotFoundException(
+        '해당 유저는 워크스페이스에 속해있지 않습니다',
+      );
+    }
+
+    workspaceMember.admin = false;
+    await this.workspaceMemberRepo.save(workspaceMember);
+    return { userId: userId, isAdmin: false };
+  }
 
   // 닉네임 검색
   async searchMembers(workspaceId: number, query: string) {

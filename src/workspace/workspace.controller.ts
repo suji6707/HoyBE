@@ -261,8 +261,17 @@ export class WorkspaceController {
   }
 
   // // 관리자 권한 삭제
-  // @UseGuards(AuthGuard, WorkspaceGuard)
-  // @Delete(':workspaceId/account/admin/:userId')
+  @UseGuards(AuthGuard, WorkspaceGuard)
+  @Delete(':workspaceId/account/admin/:userId')
+  async deleteAdminFromWorkspace(
+    @Param('workspaceId') workspaceId: number,
+    @Param('userId') userId: number,
+  ) {
+    return await this.workspaceService.deleteAdminFromWorkspace(
+      workspaceId,
+      userId,
+    );
+  }
 
   // @Post('test')
   // async test() {
