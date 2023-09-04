@@ -170,9 +170,12 @@ export class WorkspaceService {
     console.log('fr: ', userId);
     const user = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
-      .where('workspaceMember.workspaceId = :workspaceId', {
-        workspaceId: workspaceId,
-      })
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
       .innerJoinAndSelect('workspaceMember.member', 'user', 'user.id = :id', {
         id: userId,
       })
@@ -211,9 +214,12 @@ export class WorkspaceService {
   async getAvailableUsers(workspaceId: number) {
     const query = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
-      .where('workspaceMember.workspaceId = :workspaceId', {
-        workspaceId: workspaceId,
-      })
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
       .innerJoin('workspaceMember.member', 'user')
       .select('user.id', 'userId')
       .addSelect('user.imgUrl', 'imgUrl')
@@ -249,9 +255,12 @@ export class WorkspaceService {
   async addAdminToWorkspace(workspaceId: number, userId: number) {
     const workspaceMember = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
-      .where('workspaceMember.workspaceId = :workspaceId', {
-        workspaceId: workspaceId,
-      })
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
       .andWhere('workspaceMember.userId = :userId', { userId: userId })
       .getOne();
 
@@ -417,9 +426,12 @@ export class WorkspaceService {
     const workspaceWhereIamAdmin = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
       .select('workspaceMember.userId')
-      .where('workspaceMember.workspaceId = :workspaceId', {
-        workspaceId: workspaceId,
-      })
+      .innerJoinAndSelect(
+        'workspaceMember.workspace',
+        'workspace',
+        'workspace.id = :workspaceId',
+        { workspaceId: workspaceId },
+      )
       .andWhere('workspaceMember.userId = :userId', { userId: userId })
       .andWhere('workspaceMember.admin = true')
       .getRawOne();
