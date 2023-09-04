@@ -9,6 +9,8 @@ import { WorkspaceMember } from 'src/workspace/entity/workspace_member.entity';
 import { WorkspaceGuard } from 'src/workspace.guard';
 import { WorkspaceService } from 'src/workspace/workspace.service';
 import { WorkspaceInvitation } from 'src/workspace/entity/workspace_invitations.entity';
+import { FavoritesService } from 'src/favorites/favorites.service';
+import { Favorites } from 'src/favorites/entity/favorites.entity';
 
 @Module({
   imports: [
@@ -18,9 +20,10 @@ import { WorkspaceInvitation } from 'src/workspace/entity/workspace_invitations.
       User,
       WorkspaceMember,
       WorkspaceInvitation,
+      Favorites,
     ]),
   ],
-  providers: [GroupService, WorkspaceService, WorkspaceGuard],
+  providers: [GroupService, WorkspaceService, FavoritesService, WorkspaceGuard],
   exports: [GroupService],
   controllers: [GroupController],
 })

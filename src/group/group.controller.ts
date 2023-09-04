@@ -17,6 +17,7 @@ import { WorkspaceGuard } from 'src/workspace.guard';
 import { UpdateGroupDto } from './dtos/update-group.dto';
 import { WorkspaceService } from 'src/workspace/workspace.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { FavoritesService } from 'src/favorites/favorites.service';
 
 @ApiBearerAuth('Authorization')
 @Controller('workspace/:workspaceId/group')
@@ -24,6 +25,7 @@ export class GroupController {
   constructor(
     private groupService: GroupService,
     private workspaceService: WorkspaceService,
+    private favoritesService: FavoritesService,
   ) {}
 
   // 그룹 생성 (및 해당 유저 추가)
@@ -113,13 +115,26 @@ export class GroupController {
   @UseGuards(AuthGuard)
   @Get('search')
   async searchMembers(
+    @Req() req,
     @Param('workspaceId') workspaceId: number,
     @Query('query') query: string,
   ) {
-    const queryResult = await this.workspaceService.searchMembers(
+    const userId = req.userId;
+    const resultMembers = await this.workspaceService.searchMembers(
       workspaceId,
       query,
     );
+    const favoriteMembers = await this.favoritesService.getFavoriteMemberIds(
+      userId,
+      workspaceId,
+    );
+
+    const queryResult = resultMembers.map((member) => {
+      return {
+        ...member,
+        flag: favoriteMembers.includes(member.user_id),
+      };
+    });
     return queryResult;
   }
 

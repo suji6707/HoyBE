@@ -22,5 +22,6 @@ import { User } from 'src/users/entity/user.entity';
   ],
   controllers: [FavoritesController],
   providers: [FavoritesService, WorkspaceService, WorkspaceGuard],
+  exports: [FavoritesService],
 })
 export class FavoritesModule {}

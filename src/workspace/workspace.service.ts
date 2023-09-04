@@ -182,6 +182,7 @@ export class WorkspaceService {
       .select('user.id', 'userId')
       .addSelect('user.imgUrl', 'imgUrl')
       .addSelect('workspaceMember.nickname', 'nickname')
+      .addSelect('workspaceMember.admin', 'admin')
       .getRawOne();
 
     return user;
@@ -297,7 +298,6 @@ export class WorkspaceService {
   }
 
   // 워크스페이스내 유저 프로필 변경
-  //
   async updateUserProfile(
     userId: number,
     workspaceId: number,

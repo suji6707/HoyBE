@@ -233,7 +233,7 @@ export class WorkspaceController {
 
   // '나가기' & adminCount -> admin이 2 이상이면 member 테이블 삭제.
   @UseGuards(AuthGuard, WorkspaceGuard)
-  @Get(':workspaceId/leave')
+  @Post(':workspaceId/leave')
   async leaveWorkspace(@Req() req, @Param('workspaceId') workspaceId: number) {
     const userId = req.userId;
     return await this.workspaceService.leaveWorkspace(userId, workspaceId);
@@ -243,7 +243,7 @@ export class WorkspaceController {
   @UseGuards(AuthGuard, WorkspaceGuard)
   @Get(':workspaceId/account/members')
   async getAvailableUsers(@Param('workspaceId') workspaceId: number) {
-    // getAvailableUsers
+    console.log(workspaceId);
     const availableUsers = await this.workspaceService.getAvailableUsers(
       workspaceId,
     );
