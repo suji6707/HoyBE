@@ -103,16 +103,24 @@ export class TaskService {
 
   // Task 상세 조회
   async getTaskDetail(userId: number, taskId: number) {
+    const task = await this.taskRepo.findOne({
+      where: { id: taskId },
+      relations: ['user'],
+    });
+    const uploadedUserId = task.user.id;
+    const isOwner = userId == uploadedUserId ? true : false;
+
     const user = await this.workspaceMemberRepo
       .createQueryBuilder('workspaceMember')
       .innerJoin('workspaceMember.member', 'user')
       .select('user.id', 'userId')
       .addSelect('user.imgUrl', 'imgUrl')
-      .where('user.id = :userId', { userId: userId })
+      .where('user.id = :userId', { userId: uploadedUserId })
       .addSelect('workspaceMember.nickname', 'nickname')
       .getRawOne();
 
-    const task = await this.taskRepo.findOne({ where: { id: taskId } });
+    user.isOwner = isOwner;
+
     return { user, task };
   }
 

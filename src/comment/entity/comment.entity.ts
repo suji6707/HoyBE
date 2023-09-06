@@ -26,7 +26,7 @@ export class Comment {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  // @OneToOne(() => Alarm, (alarm) => alarm.comment)
+  // @OneToOne(() => Alarm)
   // alarm: Alarm;
 
   @Column('text')

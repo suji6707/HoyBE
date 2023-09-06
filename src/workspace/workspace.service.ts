@@ -252,6 +252,21 @@ export class WorkspaceService {
     return workspaceMembers;
   }
 
+  // 관리자 리스트
+  async getAdminList(workspaceId: number): Promise<number[] | null> {
+    const adminList = await this.workspaceMemberRepo
+      .createQueryBuilder('workspaceMember')
+      .select('workspaceMember.userId')
+      .where('workspaceMember.workspaceId = :workspaceId', {
+        workspaceId: workspaceId,
+      })
+      .andWhere('workspaceMember.admin = true')
+      .getRawMany();
+
+    const adminIds = adminList.map((item) => item.userId);
+    return adminIds;
+  }
+
   // 관리자 권한 추가
   async addAdminToWorkspace(workspaceId: number, userId: number) {
     const workspaceMember = await this.workspaceMemberRepo
@@ -292,6 +307,15 @@ export class WorkspaceService {
     if (!workspaceMember) {
       throw new NotFoundException(
         '해당 유저는 워크스페이스에 속해있지 않습니다',
+      );
+    }
+
+    // 해당 workspaceId의 admin == true인 length < 2면 throw Error -> 다른 에러로 받게 하기
+    const adminIds = await this.getAdminList(workspaceId);
+    if (adminIds.length < 2) {
+      throw new HttpException(
+        `마지막 관리자입니다. 워크스페이스를 유지하려면 다른 멤버에게 관리자 권한을 부여해주세요. 권한을 부여하지 않는다면 워크스페이스내 모든 데이터가 사라집니다.`,
+        HttpStatus.CONFLICT,
       );
     }
 
@@ -403,20 +427,12 @@ export class WorkspaceService {
 
     // 1. user가 host인 경우
     if (workspace) {
-      const adminList = await this.workspaceMemberRepo
-        .createQueryBuilder('workspaceMember')
-        .select('workspaceMember.userId')
-        .where('workspaceMember.workspaceId = :workspaceId', {
-          workspaceId: workspaceId,
-        })
-        .andWhere('workspaceMember.admin = true')
-        .getRawMany();
+      const adminIds = await this.getAdminList(workspaceId);
 
       // Admin.length > 1
-      if (adminList.length > 1) {
+      if (adminIds.length > 1) {
         console.log('fr: Admin.length > 1');
         /******************************** 특수 case - 내가 host일 때 *******************************/
-        const adminIds = adminList.map((item) => item.userId);
         // 현재 userId를 배열에서 제외.
         const filteredAdminIds = adminIds.filter((id) => id !== userId); // 이미 제외되어있을 것.
 
@@ -464,17 +480,10 @@ export class WorkspaceService {
     // 2. user가 host는 아니지만 admin인 경우
     if (workspaceWhereIamAdmin) {
       console.log('fr: I am Admin, not a Host');
-      const adminList = await this.workspaceMemberRepo
-        .createQueryBuilder('workspaceMember')
-        .select('workspaceMember.userId')
-        .where('workspaceMember.workspaceId = :workspaceId', {
-          workspaceId: workspaceId,
-        })
-        .andWhere('workspaceMember.admin = true')
-        .getRawMany();
+      const adminIds = await this.getAdminList(workspaceId);
 
       // Case 1. Admin.length > 1
-      if (adminList.length > 1) {
+      if (adminIds.length > 1) {
         console.log('fr: Admin leaved');
         return await this.deleteWorkspaceMembrer(workspaceId, userId);
       }
