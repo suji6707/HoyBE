@@ -27,7 +27,7 @@ export class Workspace {
   @Column({ length: 511, nullable: true })
   imgUrl?: string;
 
-  @ManyToOne(() => User, { nullable: true }) // $
+  @ManyToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'host' }) // 방장 userId
   host: User | null;
 
